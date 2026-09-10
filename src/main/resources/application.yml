@@ -26,6 +26,15 @@ spring:
         initialize-schema: false
         index-type: HNSW
         distance-type: COSINE_DISTANCE
+    mcp:
+      server:
+        protocol: STREAMABLE
+      client:
+        type: SYNC
+        streamable-http:
+          connections:
+            langgraph:
+              url: ${LANGGRAPH_MCP_URL:http://localhost:8123/mcp}
 
 server:
   port: ${PORT:8080}
