@@ -17,6 +17,15 @@ public class TenantAccess {
         return UUID.fromString(schoolId);
     }
 
+    public UUID currentUserId(Authentication authentication) {
+        if (!(authentication instanceof JwtAuthenticationToken jwt)) {
+            throw new IllegalStateException("Authenticated request is not backed by a JWT");
+        }
+        String userId = jwt.getToken().getClaimAsString("user_id");
+        if (userId == null || userId.isBlank()) throw new IllegalStateException("JWT has no user_id claim");
+        return UUID.fromString(userId);
+    }
+
     public void requireSchool(Authentication authentication, UUID requestedSchoolId) {
         UUID current = currentSchoolId(authentication);
         boolean elevated = authentication.getAuthorities().stream()
