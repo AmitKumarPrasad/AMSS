@@ -52,3 +52,5 @@ app:
       top-k: ${RAG_TOP_K:8}
   security:
     issuer: ${JWT_ISSUER:http://localhost:8080}
+    jwt-secret: ${JWT_SECRET:change-me-in-production-use-a-random-32-byte-secret}
+    access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:30}
