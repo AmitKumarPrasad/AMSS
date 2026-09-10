@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: edusphere-ai
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/edusphere}
+    username: ${DB_USERNAME:edusphere}
+    password: ${DB_PASSWORD:edusphere}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:gpt-5.6}
+    vectorstore:
+      pgvector:
+        initialize-schema: false
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  ai:
+    langgraph:
+      base-url: ${LANGGRAPH_BASE_URL:http://localhost:8123}
+    rag:
+      top-k: ${RAG_TOP_K:8}
+  security:
+    issuer: ${JWT_ISSUER:http://localhost:8080}
