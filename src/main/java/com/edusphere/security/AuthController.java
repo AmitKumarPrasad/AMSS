@@ -3,7 +3,6 @@ package com.edusphere.security;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,11 +11,9 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -25,14 +22,17 @@ public class AuthController {
     private final JwtEncoder jwtEncoder;
     private final SchoolUserDetailsService users;
     private final long ttlMinutes;
+    private final String issuer;
 
     public AuthController(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder,
                           SchoolUserDetailsService users,
-                          @Value("${app.security.access-token-minutes:30}") long ttlMinutes) {
+                          @Value("${app.security.access-token-minutes:30}") long ttlMinutes,
+                          @Value("${app.security.issuer:http://localhost:8080}") String issuer) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.users = users;
         this.ttlMinutes = ttlMinutes;
+        this.issuer = issuer;
     }
 
     @PostMapping("/login")
@@ -44,7 +44,7 @@ public class AuthController {
         var roles = authentication.getAuthorities().stream()
                 .map(a -> a.getAuthority().replaceFirst("^ROLE_", "")).toList();
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("${app.security.issuer}")
+                .issuer(issuer)
                 .subject(user.username())
                 .issuedAt(now)
                 .expiresAt(now.plus(ttlMinutes, ChronoUnit.MINUTES))
