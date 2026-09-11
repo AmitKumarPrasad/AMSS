@@ -9,6 +9,10 @@ import java.nio.file.Path;
 public interface DocumentStorage {
     void store(String storageKey, InputStream content) throws IOException;
 
+    default void store(String storageKey, InputStream content, long contentLength, String contentType) throws IOException {
+        store(storageKey, content);
+    }
+
     InputStream open(String storageKey) throws IOException;
 
     void delete(String storageKey) throws IOException;
