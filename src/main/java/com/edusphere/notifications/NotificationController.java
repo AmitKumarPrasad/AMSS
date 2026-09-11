@@ -1,0 +1,22 @@
+package com.edusphere.notifications;
+import com.edusphere.security.TenantAccess;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.UUID;
+@RestController
+@RequestMapping("/api/v1/schools/{schoolId}/notifications")
+public class NotificationController {
+ private final NotificationService service; private final TenantAccess tenantAccess;
+ public NotificationController(NotificationService service,TenantAccess tenantAccess){this.service=service;this.tenantAccess=tenantAccess;}
+ @PostMapping @ResponseStatus(HttpStatus.CREATED) @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+ public NotificationService.NotificationView enqueue(@PathVariable UUID schoolId,@Valid @RequestBody CreateNotification r,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.enqueue(schoolId,r.recipientUserId(),r.channel(),r.subject(),r.body());}
+ @GetMapping @PreAuthorize("isAuthenticated()")
+ public List<NotificationService.NotificationView> list(@PathVariable UUID schoolId,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.list(schoolId,tenantAccess.currentUserId(a));}
+ public record CreateNotification(@NotNull UUID recipientUserId,String channel,String subject,@NotBlank String body){}
+}
