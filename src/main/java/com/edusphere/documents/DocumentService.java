@@ -1,5 +1,6 @@
 package com.edusphere.documents;
 
+import com.edusphere.operations.AuditService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,8 +16,12 @@ import java.util.UUID;
 public class DocumentService {
     private static final Set<String> AUDIENCES = Set.of("SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT", "PARENT", "STUDENT");
     private final DocumentRepository repository;
+    private final AuditService auditService;
 
-    public DocumentService(DocumentRepository repository) { this.repository = repository; }
+    public DocumentService(DocumentRepository repository, AuditService auditService) {
+        this.repository = repository;
+        this.auditService = auditService;
+    }
 
     @Transactional
     public DocumentView register(UUID schoolId, CreateDocumentRequest request, UUID uploadedBy) {
@@ -27,7 +32,10 @@ public class DocumentService {
         String audience = normalizeAudience(request.audienceRole());
         Document document = new Document(schoolId, request.title().trim(), trimNullable(request.description()),
                 request.fileName().trim(), request.contentType().trim(), key, trimNullable(request.checksum()), audience, uploadedBy);
-        return toView(repository.save(document));
+        Document saved = repository.save(document);
+        auditService.record(schoolId, uploadedBy, "DOCUMENT_REGISTERED", "DOCUMENT", saved.getId(),
+                "{\"title\":\"" + jsonEscape(saved.getTitle()) + "\",\"storageKey\":\"" + jsonEscape(saved.getStorageKey()) + "\"}");
+        return toView(saved);
     }
 
     @Transactional(readOnly = true)
@@ -80,6 +88,7 @@ public class DocumentService {
     }
 
     private String trimNullable(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+    private String jsonEscape(String value) { return value.replace("\\", "\\\\").replace("\"", "\\\""); }
     private DocumentView toView(Document d) {
         return new DocumentView(d.getId(), d.getSchoolId(), d.getTitle(), d.getDescription(), d.getFileName(),
                 d.getContentType(), d.getStorageKey(), d.getChecksum(), d.getAudienceRole(), d.getStatus(), d.getUploadedBy(),
