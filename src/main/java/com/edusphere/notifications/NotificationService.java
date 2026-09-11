@@ -1,6 +1,7 @@
 package com.edusphere.notifications;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,11 +17,18 @@ public class NotificationService {
     private static final List<String> CHANNELS = List.of("IN_APP", "EMAIL", "SMS");
     private static final int MAX_ATTEMPTS = 5;
     private final NotificationRepository repository;
+    private final JdbcTemplate jdbc;
 
-    public NotificationService(NotificationRepository repository) { this.repository = repository; }
+    public NotificationService(NotificationRepository repository, JdbcTemplate jdbc) {
+        this.repository = repository;
+        this.jdbc = jdbc;
+    }
 
     @Transactional
     public NotificationView enqueue(UUID schoolId, UUID recipientUserId, String channel, String subject, String body) {
+        if (!recipientBelongsToSchool(schoolId, recipientUserId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipient does not belong to school");
+        }
         String c = channel == null ? "IN_APP" : channel.trim().toUpperCase(Locale.ROOT);
         if (!CHANNELS.contains(c)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid notification channel");
         if (body == null || body.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "body is required");
@@ -34,12 +42,25 @@ public class NotificationService {
                 .stream().map(this::view).toList();
     }
 
+    @Transactional(readOnly = true)
+    public long unreadCount(UUID schoolId, UUID userId) {
+        return repository.countBySchoolIdAndRecipientUserIdAndReadAtIsNull(schoolId, userId);
+    }
+
+    @Transactional
+    public NotificationView markRead(UUID schoolId, UUID notificationId, UUID userId) {
+        Notification notification = get(schoolId, notificationId);
+        if (!userId.equals(notification.getRecipientUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Notification recipient mismatch");
+        }
+        notification.markRead();
+        return view(repository.save(notification));
+    }
+
     @Transactional
     public int deliverableBatch() {
         int processed = 0;
         for (Notification notification : repository.findTop100ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAsc("PENDING", Instant.now())) {
-            // Provider integration is deliberately isolated from persistence. IN_APP can be considered delivered immediately;
-            // external channels remain pending until a provider adapter is introduced.
             if ("IN_APP".equals(notification.getChannel())) {
                 notification.markSent();
                 repository.save(notification);
@@ -69,6 +90,10 @@ public class NotificationService {
         return view(repository.save(notification));
     }
 
+    private boolean recipientBelongsToSchool(UUID schoolId, UUID userId) {
+        return jdbc.queryForObject("SELECT COUNT(*) FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE'", Integer.class, userId, schoolId) > 0;
+    }
+
     private Notification get(UUID schoolId, UUID id) {
         return repository.findById(id).filter(n -> schoolId.equals(n.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
@@ -76,9 +101,9 @@ public class NotificationService {
 
     private NotificationView view(Notification n) {
         return new NotificationView(n.getId(), n.getSchoolId(), n.getRecipientUserId(), n.getChannel(), n.getSubject(), n.getBody(),
-                n.getStatus(), n.getAttempts(), n.getAvailableAt(), n.getLastError(), n.getSentAt(), n.getCreatedAt());
+                n.getStatus(), n.getAttempts(), n.getAvailableAt(), n.getLastError(), n.getSentAt(), n.getReadAt(), n.getCreatedAt());
     }
 
     public record NotificationView(UUID id, UUID schoolId, UUID recipientUserId, String channel, String subject, String body,
-                                   String status, int attempts, Instant availableAt, String lastError, Instant sentAt, Instant createdAt) {}
+                                   String status, int attempts, Instant availableAt, String lastError, Instant sentAt, Instant readAt, Instant createdAt) {}
 }
