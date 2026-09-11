@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -45,13 +46,25 @@ public class RagService {
         vectorStore.add(List.of(new org.springframework.ai.document.Document(content.trim(), metadata)));
     }
 
-    public List<RagResult> search(UUID schoolId, String role, String question, int topK) {
+    public List<RagResult> search(UUID schoolId, Collection<String> roles, String question, int topK) {
         if (question == null || question.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "question is required");
         }
-        String normalizedRole = role == null || role.isBlank() ? "PUBLIC" : role.trim().toUpperCase(Locale.ROOT);
-        String filter = "school_id == '" + escape(schoolId.toString()) + "' && audience_role in ['PUBLIC','"
-                + escape(normalizedRole) + "']";
+        List<String> allowedRoles = roles == null ? List.of() : roles.stream()
+                .map(value -> value == null ? "" : value.replace("ROLE_", "").trim().toUpperCase(Locale.ROOT))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .toList();
+        if (allowedRoles.isEmpty()) allowedRoles = List.of("PUBLIC");
+        if (allowedRoles.contains("SUPER_ADMIN")) {
+            allowedRoles = List.of("PUBLIC", "SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT", "PARENT", "STUDENT");
+        }
+        String audienceFilter = allowedRoles.stream()
+                .map(value -> "'" + escape(value) + "'")
+                .reduce((left, right) -> left + "," + right)
+                .orElse("'PUBLIC'");
+        String filter = "school_id == '" + escape(schoolId.toString()) + "' && audience_role in ["
+                + audienceFilter + "]";
         return vectorStore.similaritySearch(SearchRequest.builder()
                         .query(question.trim())
                         .topK(Math.max(1, Math.min(topK, 20)))
