@@ -30,10 +30,14 @@ jobs:
         run: |
           trap 'docker compose down --volumes --remove-orphans' EXIT
           docker compose up -d --build app
-          for attempt in {1..60}; do
+          for attempt in {1..150}; do
             if curl --fail --silent http://localhost:8080/actuator/health/readiness > /tmp/health.json; then
               cat /tmp/health.json
               exit 0
+            fi
+            if (( attempt % 10 == 0 )); then
+              echo "Application not ready after $((attempt * 2))s"
+              docker compose ps
             fi
             sleep 2
           done
