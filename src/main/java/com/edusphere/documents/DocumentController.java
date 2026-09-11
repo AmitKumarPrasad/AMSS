@@ -39,7 +39,8 @@ public class DocumentController {
                                                     @RequestParam(defaultValue = "true") boolean publishedOnly,
                                                     Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return documentService.list(schoolId, publishedOnly);
+        return documentService.list(schoolId, publishedOnly,
+                authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList());
     }
 
     @PostMapping("/{documentId}/publish")
