@@ -21,9 +21,13 @@ spring:
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-5.6}
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
     vectorstore:
       pgvector:
         initialize-schema: false
+        dimensions: 1536
         index-type: HNSW
         distance-type: COSINE_DISTANCE
     mcp:
