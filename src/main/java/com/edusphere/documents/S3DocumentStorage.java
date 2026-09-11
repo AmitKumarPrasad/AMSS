@@ -24,19 +24,41 @@ public class S3DocumentStorage implements DocumentStorage {
     public S3DocumentStorage(S3Client client,
                              @Value("${app.storage.s3.bucket}") String bucket,
                              @Value("${app.storage.s3.prefix:documents/}") String prefix) {
+        if (bucket == null || bucket.isBlank()) throw new IllegalArgumentException("app.storage.s3.bucket must be configured when S3 storage is enabled");
         this.client = client;
-        this.bucket = bucket;
-        this.prefix = prefix.endsWith("/") ? prefix : prefix + "/";
+        this.bucket = bucket.trim();
+        this.prefix = prefix == null || prefix.isBlank() ? "" : (prefix.endsWith("/") ? prefix : prefix + "/");
     }
 
-    @Override public void store(String storageKey, InputStream content) throws IOException {
+    @Override
+    public void store(String storageKey, InputStream content) throws IOException {
+        throw new IllegalArgumentException("S3 storage requires content length; use the metadata-aware store method");
+    }
+
+    @Override
+    public void store(String storageKey, InputStream content, long contentLength, String contentType) throws IOException {
+        if (contentLength < 0) throw new IllegalArgumentException("contentLength must not be negative");
         try (content) {
-            client.putObject(PutObjectRequest.builder().bucket(bucket).key(key(storageKey)).build(), RequestBody.fromInputStream(content, -1));
+            PutObjectRequest.Builder request = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key(storageKey));
+            if (contentType != null && !contentType.isBlank()) request.contentType(contentType.trim());
+            client.putObject(request.build(), RequestBody.fromInputStream(content, contentLength));
         }
     }
-    @Override public InputStream open(String storageKey) { return client.getObject(GetObjectRequest.builder().bucket(bucket).key(key(storageKey)).build()); }
-    @Override public void delete(String storageKey) { client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key(storageKey)).build()); }
-    @Override public long size(String storageKey) { return client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key(storageKey)).build()).contentLength(); }
+
+    @Override public InputStream open(String storageKey) {
+        return client.getObject(GetObjectRequest.builder().bucket(bucket).key(key(storageKey)).build());
+    }
+
+    @Override public void delete(String storageKey) {
+        client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key(storageKey)).build());
+    }
+
+    @Override public long size(String storageKey) {
+        return client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key(storageKey)).build()).contentLength();
+    }
+
     @Override public Path pathFor(String storageKey) { return Path.of(key(storageKey)); }
 
     private String key(String storageKey) {
