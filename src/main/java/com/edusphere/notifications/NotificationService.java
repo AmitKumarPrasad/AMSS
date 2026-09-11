@@ -30,7 +30,7 @@ public class NotificationService {
         String c = channel == null ? "IN_APP" : channel.trim().toUpperCase(Locale.ROOT);
         if (!CHANNELS.contains(c)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid notification channel");
         if (body == null || body.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "body is required");
-        return view(repository.save(new Notification(schoolId, recipientUserId, c, subject == null ? null : subject.trim(), body.trim()));
+        return view(repository.save(new Notification(schoolId, recipientUserId, c, subject == null ? null : subject.trim(), body.trim())));
     }
 
     @Transactional(readOnly = true)
