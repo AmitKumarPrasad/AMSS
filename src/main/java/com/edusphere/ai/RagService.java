@@ -5,6 +5,7 @@ import com.edusphere.documents.DocumentAudience;
 import com.edusphere.documents.DocumentRepository;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,11 +44,9 @@ public class RagService {
 
         String audience = DocumentAudience.normalize(document.getAudienceRole());
         List<String> chunks = chunk(content.trim());
-        List<String> ids = new ArrayList<>(chunks.size());
         List<org.springframework.ai.document.Document> vectors = new ArrayList<>(chunks.size());
         for (int i = 0; i < chunks.size(); i++) {
             String id = documentId + ":" + i;
-            ids.add(id);
             Map<String, Object> metadata = Map.of(
                     "school_id", schoolId.toString(),
                     "document_id", documentId.toString(),
@@ -58,7 +57,16 @@ public class RagService {
                     "chunk_count", chunks.size());
             vectors.add(new org.springframework.ai.document.Document(id, chunks.get(i), metadata));
         }
-        vectorStore.delete(ids);
+
+        Filter.Expression schoolFilter = new Filter.Expression(
+                Filter.ExpressionType.EQ,
+                new Filter.Key("school_id"),
+                new Filter.Value(schoolId.toString()));
+        Filter.Expression documentFilter = new Filter.Expression(
+                Filter.ExpressionType.EQ,
+                new Filter.Key("document_id"),
+                new Filter.Value(documentId.toString()));
+        vectorStore.delete(new Filter.Expression(Filter.ExpressionType.AND, schoolFilter, documentFilter));
         vectorStore.add(vectors);
     }
 
