@@ -69,9 +69,9 @@ class RagServiceTest {
         var request = org.mockito.ArgumentCaptor.forClass(SearchRequest.class);
         verify(vectorStore).similaritySearch(request.capture());
         String filter = request.getValue().getFilterExpression().toString();
-        assertThat(filter).contains("school_id == '" + schoolId + "'");
-        assertThat(filter).contains("'TEACHER'");
-        assertThat(filter).contains("'PUBLIC'");
+        assertThat(filter).contains("Key[key=school_id]");
+        assertThat(filter).contains("Value[value=" + schoolId + "]");
+        assertThat(filter).contains("Value[value=[TEACHER, PUBLIC]]");
         assertThat(request.getValue().getTopK()).isEqualTo(8);
     }
 
@@ -84,7 +84,10 @@ class RagServiceTest {
         var request = org.mockito.ArgumentCaptor.forClass(SearchRequest.class);
         verify(vectorStore).similaritySearch(request.capture());
         String filter = request.getValue().getFilterExpression().toString();
-        assertThat(filter).contains("'PUBLIC'").contains("'STUDENT'").contains("'PARENT'");
+        assertThat(filter).contains("Key[key=audience_role]");
+        assertThat(filter).contains("PUBLIC");
+        assertThat(filter).contains("STUDENT");
+        assertThat(filter).contains("PARENT");
         assertThat(request.getValue().getTopK()).isEqualTo(20);
     }
 
