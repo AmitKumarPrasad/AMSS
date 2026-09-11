@@ -63,4 +63,9 @@ app:
     jwt-secret: ${JWT_SECRET:change-me-in-production-use-a-random-32-byte-secret}
     access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:30}
   storage:
+    provider: ${DOCUMENT_STORAGE_PROVIDER:local}
     local-root: ${DOCUMENT_STORAGE_ROOT:./data/documents}
+    s3:
+      bucket: ${DOCUMENT_S3_BUCKET:}
+      prefix: ${DOCUMENT_S3_PREFIX:documents/}
+      region: ${DOCUMENT_S3_REGION:ap-south-1}
