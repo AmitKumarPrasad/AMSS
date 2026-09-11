@@ -35,7 +35,8 @@ public class CommunicationController {
     @GetMapping("/announcements")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER','ACCOUNTANT','PARENT','STUDENT')")
     public List<CommunicationService.AnnouncementView> list(@PathVariable UUID schoolId,@RequestParam(defaultValue="true") boolean publishedOnly,Authentication authentication){
-        tenantAccess.requireSchool(authentication,schoolId); return service.list(schoolId,publishedOnly);
+        tenantAccess.requireSchool(authentication,schoolId);
+        return service.list(schoolId,publishedOnly,authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList());
     }
 
     @PostMapping("/announcements/{announcementId}/read")
