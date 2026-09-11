@@ -18,10 +18,12 @@ public class Notification {
     @Column(name="available_at",nullable=false) private Instant availableAt=Instant.now();
     @Column(name="last_error",columnDefinition="text") private String lastError;
     @Column(name="sent_at") private Instant sentAt;
+    @Column(name="read_at") private Instant readAt;
     @Column(name="created_at",nullable=false) private Instant createdAt=Instant.now();
     protected Notification() {}
     public Notification(UUID schoolId,UUID recipientUserId,String channel,String subject,String body){this.schoolId=schoolId;this.recipientUserId=recipientUserId;this.channel=channel;this.subject=subject;this.body=body;}
     public void markSent(){status="SENT";sentAt=Instant.now();lastError=null;}
     public void markFailed(String error,Instant retryAt){attempts++;status="PENDING";lastError=error;availableAt=retryAt;}
-    public UUID getId(){return id;} public UUID getSchoolId(){return schoolId;} public UUID getRecipientUserId(){return recipientUserId;} public String getChannel(){return channel;} public String getSubject(){return subject;} public String getBody(){return body;} public String getStatus(){return status;} public int getAttempts(){return attempts;} public Instant getAvailableAt(){return availableAt;} public String getLastError(){return lastError;} public Instant getSentAt(){return sentAt;} public Instant getCreatedAt(){return createdAt;}
+    public void markRead(){readAt=Instant.now();}
+    public UUID getId(){return id;} public UUID getSchoolId(){return schoolId;} public UUID getRecipientUserId(){return recipientUserId;} public String getChannel(){return channel;} public String getSubject(){return subject;} public String getBody(){return body;} public String getStatus(){return status;} public int getAttempts(){return attempts;} public Instant getAvailableAt(){return availableAt;} public String getLastError(){return lastError;} public Instant getSentAt(){return sentAt;} public Instant getReadAt(){return readAt;} public Instant getCreatedAt(){return createdAt;}
 }
