@@ -3,6 +3,7 @@ package com.edusphere.ai;
 import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ public class AiAssistantController {
     }
 
     @PostMapping("/documents/{documentId}/index")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public void index(@PathVariable UUID schoolId, @PathVariable UUID documentId,
                       @Valid @RequestBody IndexDocumentRequest request,
                       Authentication authentication) {
@@ -31,16 +33,14 @@ public class AiAssistantController {
     }
 
     @PostMapping("/ask")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER','ACCOUNTANT','PARENT','STUDENT')")
     public AssistantResponse ask(@PathVariable UUID schoolId,
                                  @Valid @RequestBody AskRequest request,
                                  Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        List<String> roles = authentication.getAuthorities().stream()
-                .map(authority -> authority.getAuthority())
-                .toList();
+        List<String> roles = authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList();
         List<RagService.RagResult> evidence = ragService.search(schoolId, roles, request.question(), 8);
-        String answer = assistant.answer(request.question(), evidence);
-        return new AssistantResponse(answer, evidence);
+        return new AssistantResponse(assistant.answer(request.question(), evidence), evidence);
     }
 
     public record IndexDocumentRequest(@NotBlank String content) {}
