@@ -19,6 +19,13 @@ jobs:
         run: mvn -B test
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Build production container
+        run: docker build --tag amss:ci .
+      - name: Validate launch compose
+        run: docker compose config
+        env:
+          OPENAI_API_KEY: ci-placeholder
+          JWT_SECRET: ci-placeholder-ci-placeholder-ci-placeholder
 
   python:
     runs-on: ubuntu-latest
