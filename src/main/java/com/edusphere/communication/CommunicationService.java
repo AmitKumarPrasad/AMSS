@@ -6,13 +6,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class CommunicationService {
-    private static final java.util.Set<String> AUDIENCES = java.util.Set.of("SUPER_ADMIN","SCHOOL_ADMIN","TEACHER","ACCOUNTANT","PARENT","STUDENT");
+    private static final Set<String> AUDIENCES = Set.of("SUPER_ADMIN","SCHOOL_ADMIN","TEACHER","ACCOUNTANT","PARENT","STUDENT");
     private final AnnouncementRepository announcementRepository;
     private final AnnouncementReadRepository readRepository;
 
@@ -33,15 +35,32 @@ public class CommunicationService {
     }
 
     @Transactional(readOnly=true)
-    public List<AnnouncementView> list(UUID schoolId, boolean publishedOnly) {
-        return (publishedOnly ? announcementRepository.findBySchoolIdAndStatusOrderByPublishedAtDesc(schoolId,"PUBLISHED")
-                : announcementRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId)).stream().map(this::toView).toList();
+    public List<AnnouncementView> list(UUID schoolId, boolean publishedOnly, Collection<String> roles) {
+        List<Announcement> announcements = publishedOnly
+                ? announcementRepository.findBySchoolIdAndStatusOrderByPublishedAtDesc(schoolId,"PUBLISHED")
+                : announcementRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId);
+        Set<String> allowed = normalizeRoles(roles);
+        return announcements.stream()
+                .filter(a -> !publishedOnly || isVisible(a.getAudienceRole(), allowed))
+                .map(this::toView).toList();
     }
 
     @Transactional
     public void markRead(UUID schoolId, UUID announcementId, UUID userId) {
         get(schoolId, announcementId);
         if (!readRepository.existsByAnnouncementIdAndUserId(announcementId,userId)) readRepository.save(new AnnouncementRead(announcementId,userId));
+    }
+
+    private Set<String> normalizeRoles(Collection<String> roles) {
+        if (roles == null) return Set.of();
+        return roles.stream().filter(java.util.Objects::nonNull)
+                .map(value -> value.replace("ROLE_", "").trim().toUpperCase(Locale.ROOT))
+                .filter(AUDIENCES::contains).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    private boolean isVisible(String audience, Set<String> roles) {
+        if (audience == null || audience.isBlank()) return true;
+        return roles.contains("SUPER_ADMIN") || roles.contains(audience);
     }
 
     private Announcement get(UUID schoolId, UUID id) {
