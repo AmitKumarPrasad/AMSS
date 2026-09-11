@@ -20,7 +20,7 @@ Production-oriented school management platform built as a polyglot monorepo:
 - Fees: invoices, payments, balances and duplicate/overpayment protection.
 - Communication: announcements, audience targeting and read tracking.
 - Documents: registration, publishing, archiving, audience visibility and real file upload/download storage.
-- Notifications: in-app notification outbox, read state, scheduling and tenant-safe recipient validation.
+- Notifications: in-app notification outbox, read state, scheduling, email delivery and atomic multi-instance claiming.
 - Operations: audit events, school dashboard KPIs and operational observability endpoints.
 - Admin Web UI: authenticated responsive dashboard for school operations.
 - AI Assistant: Spring AI, RAG/vector search, MCP tools and LangGraph orchestration.
@@ -54,14 +54,37 @@ Postgres Redis   MCP Server
 - Retrieval with metadata filters and source citations.
 - Tests for domain, API, security and AI workflows.
 - Observability with Actuator/Micrometer.
-- Document content is stored behind a storage abstraction; local filesystem is the default provider and can be replaced by object storage without changing the document API contract.
+- Document content is stored behind a storage abstraction; local filesystem is the default provider and S3-compatible object storage is supported without changing the document API contract.
+
+## Document storage
+
+Local filesystem remains the default for development:
+
+```text
+DOCUMENT_STORAGE_PROVIDER=local
+DOCUMENT_STORAGE_ROOT=./data/documents
+```
+
+For multi-instance deployments, use S3 or an S3-compatible service such as MinIO:
+
+```text
+DOCUMENT_STORAGE_PROVIDER=s3
+DOCUMENT_S3_BUCKET=amss-documents
+DOCUMENT_S3_REGION=ap-south-1
+DOCUMENT_S3_PREFIX=documents/
+# Optional for MinIO or another S3-compatible endpoint:
+DOCUMENT_S3_ENDPOINT=http://minio:9000
+DOCUMENT_S3_PATH_STYLE_ACCESS=true
+```
+
+The AWS SDK default credential provider chain is used, so credentials should be supplied through the runtime environment, workload identity, or the platform's secret manager. Never commit access keys or secrets.
 
 ## Current status
 
-Core school-management bounded contexts, AI foundation, authenticated admin UI and local document storage are implemented and CI-verified. Remaining work is primarily production hardening: object-storage provider integration, external notification providers, atomic notification claiming for multi-instance deployments, richer analytics, end-to-end integration coverage, deployment configuration, security review and operational runbooks.
+Core school-management bounded contexts, AI foundation, authenticated admin UI, local document storage, S3-compatible object storage, email notifications and atomic notification claiming are implemented and CI-verified. Remaining work is primarily production hardening: SMS provider integration, richer analytics, end-to-end integration coverage, deployment configuration, security review and operational runbooks.
 
 ## Configuration
 
 Set `OPENAI_API_KEY` in the runtime environment. Never commit secrets. Local development should use an ignored `.env`/`.env.local` or IDE environment configuration.
 
-Document uploads use `DOCUMENT_STORAGE_ROOT` (default `./data/documents`) and are limited by `MAX_FILE_SIZE` (default `25MB`) and `MAX_REQUEST_SIZE` (default `30MB`).
+Document uploads are limited by `MAX_FILE_SIZE` (default `25MB`) and `MAX_REQUEST_SIZE` (default `30MB`).
