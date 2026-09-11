@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,9 +31,14 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public List<DocumentView> list(UUID schoolId, boolean publishedOnly) {
-        return (publishedOnly ? repository.findBySchoolIdAndStatusOrderByCreatedAtDesc(schoolId, "PUBLISHED")
-                : repository.findBySchoolIdOrderByCreatedAtDesc(schoolId)).stream().map(this::toView).toList();
+    public List<DocumentView> list(UUID schoolId, boolean publishedOnly, Collection<String> roles) {
+        List<Document> documents = publishedOnly
+                ? repository.findBySchoolIdAndStatusOrderByCreatedAtDesc(schoolId, "PUBLISHED")
+                : repository.findBySchoolIdOrderByCreatedAtDesc(schoolId);
+        Set<String> allowed = normalizeRoles(roles);
+        return documents.stream()
+                .filter(document -> !publishedOnly || isVisible(document.getAudienceRole(), allowed))
+                .map(this::toView).toList();
     }
 
     @Transactional
@@ -58,6 +65,18 @@ public class DocumentService {
         if ("PUBLIC".equals(audience)) return null;
         if (!AUDIENCES.contains(audience)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid audienceRole");
         return audience;
+    }
+
+    private Set<String> normalizeRoles(Collection<String> roles) {
+        if (roles == null) return Set.of();
+        return roles.stream().filter(java.util.Objects::nonNull)
+                .map(value -> value.replace("ROLE_", "").trim().toUpperCase(Locale.ROOT))
+                .filter(AUDIENCES::contains).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    private boolean isVisible(String audience, Set<String> roles) {
+        if (audience == null || audience.isBlank()) return true;
+        return roles.contains("SUPER_ADMIN") || roles.contains(audience);
     }
 
     private String trimNullable(String value) { return value == null || value.isBlank() ? null : value.trim(); }
