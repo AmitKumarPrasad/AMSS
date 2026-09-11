@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,20 +34,23 @@ class RagServiceTest {
     }
 
     @Test
-    void indexUsesDeterministicChunkIdsAndReindexDeletesBeforeAdd() {
+    void indexDeletesAllExistingDocumentVectorsBeforeAdd() {
         Document document = document(schoolId, "PUBLISHED", null);
         when(documentRepository.findById(documentId)).thenReturn(Optional.of(document));
         String content = "word ".repeat(900);
 
         service.index(schoolId, documentId, content);
-        service.index(schoolId, documentId, content);
+        service.index(schoolId, documentId, "short policy");
 
-        var ids = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(vectorStore, times(2)).delete(ids.capture());
-        assertThat(ids.getAllValues()).hasSize(2);
-        assertThat(ids.getAllValues().get(0)).isEqualTo(ids.getAllValues().get(1));
-        assertThat((List<?>) ids.getValue()).isNotEmpty();
-        assertThat(((List<?>) ids.getValue()).get(0).toString()).startsWith(documentId + ":");
+        var filter = org.mockito.ArgumentCaptor.forClass(Filter.Expression.class);
+        verify(vectorStore, times(2)).delete(filter.capture());
+        assertThat(filter.getAllValues()).allSatisfy(expression -> {
+            String value = expression.toString();
+            assertThat(value).contains("Key[key=school_id]");
+            assertThat(value).contains("Value[value=" + schoolId + "]");
+            assertThat(value).contains("Key[key=document_id]");
+            assertThat(value).contains("Value[value=" + documentId + "]");
+        });
         verify(vectorStore, times(2)).add(any());
     }
 
