@@ -2,13 +2,13 @@ services:
   postgres:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_DB: edusphere
-      POSTGRES_USER: edusphere
-      POSTGRES_PASSWORD: edusphere
+      POSTGRES_DB: ${POSTGRES_DB:-edusphere}
+      POSTGRES_USER: ${POSTGRES_USER:-edusphere}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-edusphere}
     ports: ["5432:5432"]
     volumes: ["postgres_data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U edusphere -d edusphere"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -17,7 +17,44 @@ services:
     image: redis:8-alpine
     ports: ["6379:6379"]
     volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports: ["8080:8080"]
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-edusphere}
+      DB_USERNAME: ${POSTGRES_USER:-edusphere}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-edusphere}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY before starting the app}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a strong random secret before starting the app}
+      DOCUMENT_STORAGE_PROVIDER: local
+      DOCUMENT_STORAGE_ROOT: /app/data/documents
+      LANGGRAPH_BASE_URL: ${LANGGRAPH_BASE_URL:-http://host.docker.internal:8123}
+    volumes:
+      - documents_data:/app/data/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health/readiness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
 volumes:
   postgres_data:
   redis_data:
+  documents_data:
