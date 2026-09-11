@@ -29,6 +29,7 @@ services:
       dockerfile: Dockerfile
     ports: ["8080:8080"]
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-edusphere}
       DB_USERNAME: ${POSTGRES_USER:-edusphere}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-edusphere}
