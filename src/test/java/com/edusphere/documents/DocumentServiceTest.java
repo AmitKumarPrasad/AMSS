@@ -20,6 +20,9 @@ class DocumentServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private DocumentStorage storage;
+
     @Test
     void publishedDocumentsIncludePublicAndMatchingRoleOnly() {
         UUID schoolId = UUID.randomUUID();
@@ -30,7 +33,7 @@ class DocumentServiceTest {
                         document(schoolId, "PARENT", "Parent")
                 ));
 
-        List<DocumentService.DocumentView> result = new DocumentService(repository, auditService)
+        List<DocumentService.DocumentView> result = new DocumentService(repository, auditService, storage)
                 .list(schoolId, true, List.of("ROLE_TEACHER"));
 
         assertThat(result).extracting(DocumentService.DocumentView::title)
@@ -46,7 +49,7 @@ class DocumentServiceTest {
                         document(schoolId, "PARENT", "Parent")
                 ));
 
-        List<DocumentService.DocumentView> result = new DocumentService(repository, auditService)
+        List<DocumentService.DocumentView> result = new DocumentService(repository, auditService, storage)
                 .list(schoolId, true, List.of("ROLE_SUPER_ADMIN"));
 
         assertThat(result).extracting(DocumentService.DocumentView::title)
@@ -62,7 +65,7 @@ class DocumentServiceTest {
                         document(schoolId, "TEACHER", "Teacher draft")
                 ));
 
-        List<DocumentService.DocumentView> result = new DocumentService(repository, auditService)
+        List<DocumentService.DocumentView> result = new DocumentService(repository, auditService, storage)
                 .list(schoolId, false, List.of("ROLE_TEACHER"));
 
         assertThat(result).extracting(DocumentService.DocumentView::title)

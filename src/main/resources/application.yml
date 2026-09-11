@@ -15,6 +15,10 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:25MB}
+      max-request-size: ${MAX_REQUEST_SIZE:30MB}
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
@@ -58,3 +62,5 @@ app:
     issuer: ${JWT_ISSUER:http://localhost:8080}
     jwt-secret: ${JWT_SECRET:change-me-in-production-use-a-random-32-byte-secret}
     access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:30}
+  storage:
+    local-root: ${DOCUMENT_STORAGE_ROOT:./data/documents}
