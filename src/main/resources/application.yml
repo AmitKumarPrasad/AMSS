@@ -69,3 +69,5 @@ app:
       bucket: ${DOCUMENT_S3_BUCKET:}
       prefix: ${DOCUMENT_S3_PREFIX:documents/}
       region: ${DOCUMENT_S3_REGION:ap-south-1}
+      endpoint: ${DOCUMENT_S3_ENDPOINT:}
+      path-style-access: ${DOCUMENT_S3_PATH_STYLE_ACCESS:false}
