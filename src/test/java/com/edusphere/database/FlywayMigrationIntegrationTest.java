@@ -8,7 +8,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.DriverManager;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FlywayMigrationIntegrationTest {
+    private static final int EXPECTED_MIGRATIONS = 15;
+
     @Container
     private static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("pgvector/pgvector:pg17")
@@ -33,11 +34,12 @@ class FlywayMigrationIntegrationTest {
 
         var result = flyway.migrate();
         assertTrue(result.success);
-        assertEquals(14, result.migrationsExecuted);
+        assertEquals(EXPECTED_MIGRATIONS, result.migrationsExecuted);
 
         try (var connection = DriverManager.getConnection(
                 POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
-            assertEquals(14, countRows(connection, "select count(*) from flyway_schema_history where success = true"));
+            assertEquals(EXPECTED_MIGRATIONS,
+                    countRows(connection, "select count(*) from flyway_schema_history where success = true"));
             assertTrue(tableExists(connection, "schools"));
             assertTrue(tableExists(connection, "app_users"));
             assertTrue(tableExists(connection, "students"));
