@@ -26,12 +26,10 @@ public class StudentGuardianService {
                 .filter(s -> schoolId.equals(s.getSchoolId()) && "ACTIVE".equals(s.getStatus()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
         String relationship = request.relationship().trim().toUpperCase(Locale.ROOT);
-        if (!RELATIONSHIPS.contains(relationship)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid relationship");
-        }
+        if (!RELATIONSHIPS.contains(relationship)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid relationship");
         if (request.primaryContact()) {
             repository.findByStudentIdAndStatusOrderByPrimaryContactDescFullNameAsc(student.getId(), "ACTIVE")
-                    .forEach(this::unsetPrimary);
+                    .forEach(g -> { g.setPrimaryContact(false); repository.save(g); });
         }
         StudentGuardian guardian = new StudentGuardian(schoolId, studentId, request.fullName().trim(), relationship,
                 trim(request.email()), trim(request.phone()), request.primaryContact());
@@ -45,30 +43,13 @@ public class StudentGuardianService {
                 .stream().map(this::view).toList();
     }
 
-    private void unsetPrimary(StudentGuardian guardian) {
-        try {
-            var field = StudentGuardian.class.getDeclaredField("primaryContact");
-            field.setAccessible(true);
-            field.setBoolean(guardian, false);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Unable to update primary guardian", e);
-        }
-        repository.save(guardian);
-    }
-
     private void requireStudent(UUID schoolId, UUID studentId) {
-        studentRepository.findById(studentId)
-                .filter(s -> schoolId.equals(s.getSchoolId()))
+        studentRepository.findById(studentId).filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
     }
-
     private String trim(String value) { return value == null || value.isBlank() ? null : value.trim(); }
-    private GuardianView view(StudentGuardian g) {
-        return new GuardianView(g.getId(), g.getSchoolId(), g.getStudentId(), g.getFullName(), g.getRelationship(),
-                g.getEmail(), g.getPhone(), g.isPrimaryContact(), g.getStatus(), g.getCreatedAt());
-    }
+    private GuardianView view(StudentGuardian g) { return new GuardianView(g.getId(), g.getSchoolId(), g.getStudentId(), g.getFullName(), g.getRelationship(), g.getEmail(), g.getPhone(), g.isPrimaryContact(), g.getStatus(), g.getCreatedAt()); }
 
     public record CreateGuardianRequest(String fullName, String relationship, String email, String phone, boolean primaryContact) {}
-    public record GuardianView(UUID id, UUID schoolId, UUID studentId, String fullName, String relationship,
-                               String email, String phone, boolean primaryContact, String status, java.time.Instant createdAt) {}
+    public record GuardianView(UUID id, UUID schoolId, UUID studentId, String fullName, String relationship, String email, String phone, boolean primaryContact, String status, java.time.Instant createdAt) {}
 }
