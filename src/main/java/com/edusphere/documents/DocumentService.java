@@ -57,7 +57,7 @@ public class DocumentService {
                 ? "application/octet-stream" : file.getContentType().trim();
         String storageKey = schoolId + "/" + UUID.randomUUID() + "/" + fileName;
         try {
-            storage.store(storageKey, file.getInputStream());
+            storage.store(storageKey, file.getInputStream(), file.getSize(), contentType);
             String checksum = sha256(storage.open(storageKey));
             return register(schoolId, new CreateDocumentRequest(title, description, fileName, contentType,
                     storageKey, checksum, audienceRole), uploadedBy);
