@@ -56,7 +56,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/", "/index.html", "/assets/**", "/api/v1/auth/**", "/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/", "/index.html", "/assets/**", "/api/v1/auth/**", "/actuator/health/**", "/actuator/info").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter)));
         return http.build();
