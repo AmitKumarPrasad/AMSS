@@ -30,20 +30,25 @@ public class NotificationService {
         String c = channel == null ? "IN_APP" : channel.trim().toUpperCase(Locale.ROOT);
         if (!CHANNELS.contains(c)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid notification channel");
         if (body == null || body.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "body is required");
-        return view(repository.save(new Notification(schoolId, recipientUserId, c, subject == null ? null : subject.trim(), body.trim())));
+        return view(repository.save(new Notification(schoolId, recipientUserId, c, subject == null ? null : subject.trim(), body.trim()));
     }
+
     @Transactional(readOnly = true)
-    public List<NotificationView> list(UUID schoolId, UUID userId) { return repository.findBySchoolIdAndRecipientUserIdOrderByCreatedAtDesc(schoolId, userId).stream().map(this::view).toList(); }
+    public List<NotificationView> list(UUID schoolId, UUID userId) {
+        return repository.findBySchoolIdAndRecipientUserIdOrderByCreatedAtDesc(schoolId, userId).stream().map(this::view).toList();
+    }
+
     @Transactional(readOnly = true)
-    public long unreadCount(UUID schoolId, UUID userId) { return repository.countBySchoolIdAndRecipientUserIdAndReadAtIsNull(schoolId, userId); }
+    public long unreadCount(UUID schoolId, UUID userId) {
+        return repository.countBySchoolIdAndRecipientUserIdAndReadAtIsNull(schoolId, userId);
+    }
+
     @Transactional
     public NotificationView markRead(UUID schoolId, UUID notificationId, UUID userId) {
         Notification notification = get(schoolId, notificationId);
         if (!userId.equals(notification.getRecipientUserId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Notification recipient mismatch");
         notification.markRead(); return view(repository.save(notification));
     }
-    @Transactional
-    public int deliverableBatch() { return 0; }
 
     @Transactional
     public boolean deliverClaimed(UUID notificationId, String workerId) {
@@ -65,6 +70,7 @@ public class NotificationService {
             return false;
         }
     }
+
     @Transactional
     public NotificationView markFailed(UUID schoolId, UUID notificationId, String error) {
         Notification n = get(schoolId, notificationId);
@@ -74,10 +80,23 @@ public class NotificationService {
         n.markFailed(safeError.substring(0, Math.min(1000, safeError.length())), Instant.now().plus(Duration.ofSeconds(delaySeconds)));
         return view(repository.save(n));
     }
+
     @Transactional
-    public NotificationView markSent(UUID schoolId, UUID notificationId) { Notification n = get(schoolId, notificationId); n.markSent(); return view(repository.save(n)); }
-    private boolean recipientBelongsToSchool(UUID schoolId, UUID userId) { return jdbc.queryForObject("SELECT COUNT(*) FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE'", Integer.class, userId, schoolId) > 0; }
-    private Notification get(UUID schoolId, UUID id) { return repository.findById(id).filter(n -> schoolId.equals(n.getSchoolId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found")); }
-    private NotificationView view(Notification n) { return new NotificationView(n.getId(), n.getSchoolId(), n.getRecipientUserId(), n.getChannel(), n.getSubject(), n.getBody(), n.getStatus(), n.getAttempts(), n.getAvailableAt(), n.getLastError(), n.getSentAt(), n.getReadAt(), n.getCreatedAt()); }
+    public NotificationView markSent(UUID schoolId, UUID notificationId) {
+        Notification n = get(schoolId, notificationId); n.markSent(); return view(repository.save(n));
+    }
+
+    private boolean recipientBelongsToSchool(UUID schoolId, UUID userId) {
+        return jdbc.queryForObject("SELECT COUNT(*) FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE'", Integer.class, userId, schoolId) > 0;
+    }
+
+    private Notification get(UUID schoolId, UUID id) {
+        return repository.findById(id).filter(n -> schoolId.equals(n.getSchoolId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+    }
+
+    private NotificationView view(Notification n) {
+        return new NotificationView(n.getId(), n.getSchoolId(), n.getRecipientUserId(), n.getChannel(), n.getSubject(), n.getBody(), n.getStatus(), n.getAttempts(), n.getAvailableAt(), n.getLastError(), n.getSentAt(), n.getReadAt(), n.getCreatedAt());
+    }
+
     public record NotificationView(UUID id, UUID schoolId, UUID recipientUserId, String channel, String subject, String body, String status, int attempts, Instant availableAt, String lastError, Instant sentAt, Instant readAt, Instant createdAt) {}
 }
