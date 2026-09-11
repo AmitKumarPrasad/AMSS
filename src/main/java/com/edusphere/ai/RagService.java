@@ -5,7 +5,6 @@ import com.edusphere.documents.DocumentAudience;
 import com.edusphere.documents.DocumentRepository;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.document.Document.Builder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,11 +56,7 @@ public class RagService {
                     "source", document.getFileName(),
                     "chunk_index", i,
                     "chunk_count", chunks.size());
-            vectors.add(Builder.builder()
-                    .id(id)
-                    .text(chunks.get(i))
-                    .metadata(metadata)
-                    .build());
+            vectors.add(new org.springframework.ai.document.Document(id, chunks.get(i), metadata));
         }
         vectorStore.delete(ids);
         vectorStore.add(vectors);
