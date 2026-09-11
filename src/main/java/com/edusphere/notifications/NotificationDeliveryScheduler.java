@@ -5,10 +5,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class NotificationDeliveryScheduler {
-    private final NotificationService service;
+    private final NotificationClaimWorker worker;
 
-    public NotificationDeliveryScheduler(NotificationService service) { this.service = service; }
+    public NotificationDeliveryScheduler(NotificationClaimWorker worker) { this.worker = worker; }
 
     @Scheduled(fixedDelayString = "${notifications.delivery.fixed-delay-ms:30000}")
-    public void deliverPending() { service.deliverableBatch(); }
+    public void deliver() { worker.processBatch(); }
 }
