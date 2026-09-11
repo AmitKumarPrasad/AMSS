@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EduSphere AI — School Management</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f7fb}
+    *{box-sizing:border-box}body{margin:0}button,input{font:inherit}.shell{min-height:100vh}.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#eef4ff,#f8fafc)}
+    .card{background:#fff;border:1px solid #e5e9f2;border-radius:18px;box-shadow:0 16px 50px #18233d12}.login-card{width:min(420px,100%);padding:34px}.brand{font-weight:800;font-size:22px;letter-spacing:-.03em}.muted{color:#687386}.label{display:block;font-size:13px;font-weight:650;margin:18px 0 7px}.input{width:100%;padding:12px 13px;border:1px solid #d9dfeb;border-radius:10px;outline:none}.input:focus{border-color:#5378e8;box-shadow:0 0 0 3px #5378e81a}.btn{width:100%;border:0;border-radius:10px;padding:12px 15px;margin-top:22px;background:#315bdc;color:white;font-weight:700;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.error{min-height:20px;margin-top:12px;color:#b42318;font-size:13px}
+    .app{display:none;min-height:100vh}.topbar{height:68px;background:#fff;border-bottom:1px solid #e7ebf2;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.user{display:flex;align-items:center;gap:14px}.pill{padding:7px 10px;border-radius:999px;background:#eef2ff;color:#315bdc;font-size:12px;font-weight:700}.logout{border:1px solid #d9dfeb;background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer}.main{max-width:1280px;margin:0 auto;padding:30px 24px}.heading{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px}.heading h1{margin:0;font-size:28px;letter-spacing:-.04em}.heading p{margin:6px 0 0;color:#687386}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi{padding:20px}.kpi .title{font-size:13px;color:#687386}.kpi .value{font-size:29px;font-weight:800;margin-top:9px;letter-spacing:-.04em}.section{margin-top:22px;padding:22px}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.section h2{font-size:17px;margin:0}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid #edf0f5}th{font-size:12px;color:#687386;text-transform:uppercase;letter-spacing:.05em}.empty{padding:26px;text-align:center;color:#687386}.status{font-size:13px;color:#687386}.alert{margin-top:15px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;font-size:13px}
+    @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.grid{grid-template-columns:1fr}.topbar{padding:0 16px}.main{padding:22px 16px}.login-card{padding:26px}}
+  </style>
+</head>
+<body>
+<div id="login" class="login"><div class="card login-card">
+  <div class="brand">EduSphere AI</div><p class="muted">School management administration</p>
+  <form id="loginForm"><label class="label" for="username">Username</label><input class="input" id="username" autocomplete="username" required>
+  <label class="label" for="password">Password</label><input class="input" id="password" type="password" autocomplete="current-password" required>
+  <button class="btn" id="loginBtn">Sign in</button><div id="loginError" class="error" role="alert"></div></form>
+</div></div>
+<div id="app" class="app">
+  <header class="topbar"><div class="brand">EduSphere AI</div><div class="user"><span id="welcome" class="status"></span><span id="role" class="pill"></span><button id="logout" class="logout">Log out</button></div></header>
+  <main class="main"><div class="heading"><div><h1>School dashboard</h1><p id="date">Loading overview…</p></div><span id="notificationPill" class="pill">0 unread</span></div>
+    <div class="grid">
+      <div class="card kpi"><div class="title">Active students</div><div id="students" class="value">—</div></div>
+      <div class="card kpi"><div class="title">Active staff</div><div id="staff" class="value">—</div></div>
+      <div class="card kpi"><div class="title">Present today</div><div id="present" class="value">—</div></div>
+      <div class="card kpi"><div class="title">Absent today</div><div id="absent" class="value">—</div></div>
+      <div class="card kpi"><div class="title">Pending leaves</div><div id="leaves" class="value">—</div></div>
+      <div class="card kpi"><div class="title">Outstanding fees</div><div id="fees" class="value">—</div></div>
+    </div>
+    <section class="card section"><div class="section-head"><h2>Students</h2><span id="studentStatus" class="status">Loading…</span></div><div id="studentTable" class="table-wrap"></div></section>
+    <div id="accessNote" class="alert" hidden>Dashboard data could not be loaded. Your session may not have school-admin access.</div>
+  </main>
+</div>
+<script>
+(() => {
+  const tokenKey='edusphere.accessToken';
+  const $=id=>document.getElementById(id);
+  const token=()=>sessionStorage.getItem(tokenKey);
+  function decodeJwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch{return null}}
+  function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+  function showApp(t){const p=decodeJwt(t);if(!p)return; $('login').style.display='none';$('app').style.display='block';$('welcome').textContent=p.display_name||p.sub||'User';$('role').textContent=(p.roles||[]).join(' / ')||'User';load(p)}
+  async function api(url,opts={}){const r=await fetch(url,{...opts,headers:{'Authorization':'Bearer '+token(),'Accept':'application/json',...(opts.headers||{})}});if(r.status===401){logout();throw new Error('Session expired');}if(!r.ok){let msg='Request failed ('+r.status+')';try{const x=await r.json();msg=x.message||msg}catch{}throw new Error(msg)}return r.json()}
+  async function load(p){const school=p.school_id;if(!school){$('accessNote').hidden=false;return}try{const d=await api(`/api/v1/schools/${school}/operations/dashboard`);$('date').textContent='Overview for '+d.date;$('students').textContent=d.activeStudents;$('staff').textContent=d.activeStaff;$('present').textContent=d.presentToday;$('absent').textContent=d.absentToday;$('leaves').textContent=d.pendingLeaves;$('fees').textContent=new Intl.NumberFormat(undefined,{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(d.outstandingFees||0));$('notificationPill').textContent=d.unreadNotifications+' unread';}catch(e){$('accessNote').hidden=false}
+    try{const list=await api(`/api/v1/schools/${school}/students`);renderStudents(list)}catch(e){$('studentStatus').textContent='Unavailable';$('studentTable').innerHTML='<div class="empty">Student list is unavailable for this role.</div>'}}
+  function renderStudents(list){$('studentStatus').textContent=list.length+' active';if(!list.length){$('studentTable').innerHTML='<div class="empty">No active students found.</div>';return}const rows=list.slice(0,100).map(s=>`<tr><td>${escapeHtml(s.admissionNumber)}</td><td>${escapeHtml([s.firstName,s.lastName].filter(Boolean).join(' '))}</td><td>${escapeHtml(s.dateOfBirth||'—')}</td><td>${escapeHtml(s.status||'ACTIVE')}</td></tr>`).join('');$('studentTable').innerHTML=`<table><thead><tr><th>Admission no.</th><th>Name</th><th>Date of birth</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`}
+  function logout(){sessionStorage.removeItem(tokenKey);$('app').style.display='none';$('login').style.display='grid';$('password').value='';$('loginError').textContent=''}
+  $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginBtn').disabled=true;$('loginError').textContent='';try{const r=await fetch('/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({username:$('username').value.trim(),password:$('password').value})});if(!r.ok)throw new Error('Invalid username or password');const x=await r.json();sessionStorage.setItem(tokenKey,x.accessToken);showApp(x.accessToken)}catch(err){$('loginError').textContent=err.message}finally{$('loginBtn').disabled=false}});
+  $('logout').addEventListener('click',logout);if(token())showApp(token());
+})();
+</script>
+</body>
+</html>
