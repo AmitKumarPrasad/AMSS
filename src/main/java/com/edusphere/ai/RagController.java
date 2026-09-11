@@ -3,6 +3,7 @@ package com.edusphere.ai;
 import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,12 +24,11 @@ public class RagController {
     }
 
     @PostMapping("/query")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER','ACCOUNTANT','PARENT','STUDENT')")
     public Response query(@PathVariable UUID schoolId, @Valid @RequestBody Request request,
                           Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        List<String> roles = authentication.getAuthorities().stream()
-                .map(authority -> authority.getAuthority())
-                .toList();
+        List<String> roles = authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList();
         List<RagService.RagResult> evidence = service.search(schoolId, roles, request.question(), 8);
         return new Response(assistant.answer(request.question(), evidence), evidence);
     }
