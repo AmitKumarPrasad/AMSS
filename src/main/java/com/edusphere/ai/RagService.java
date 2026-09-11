@@ -1,6 +1,7 @@
 package com.edusphere.ai;
 
 import com.edusphere.documents.Document;
+import com.edusphere.documents.DocumentAudience;
 import com.edusphere.documents.DocumentRepository;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -10,12 +11,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class RagService {
+    private static final List<String> ALL_ROLES = List.of("PUBLIC", "SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT", "PARENT", "STUDENT");
     private final VectorStore vectorStore;
     private final DocumentRepository documentRepository;
 
@@ -35,8 +36,7 @@ public class RagService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "content is required");
         }
 
-        String audience = document.getAudienceRole() == null || document.getAudienceRole().isBlank()
-                ? "PUBLIC" : document.getAudienceRole().trim().toUpperCase(Locale.ROOT);
+        String audience = DocumentAudience.normalize(document.getAudienceRole());
         Map<String, Object> metadata = Map.of(
                 "school_id", schoolId.toString(),
                 "document_id", documentId.toString(),
@@ -51,20 +51,18 @@ public class RagService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "question is required");
         }
         List<String> allowedRoles = roles == null ? List.of() : roles.stream()
-                .map(value -> value == null ? "" : value.replace("ROLE_", "").trim().toUpperCase(Locale.ROOT))
+                .map(value -> value == null ? "" : value.replace("ROLE_", "").trim().toUpperCase())
                 .filter(value -> !value.isBlank())
                 .distinct()
                 .toList();
         if (allowedRoles.isEmpty()) allowedRoles = List.of("PUBLIC");
-        if (allowedRoles.contains("SUPER_ADMIN")) {
-            allowedRoles = List.of("PUBLIC", "SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT", "PARENT", "STUDENT");
-        }
+        if (allowedRoles.contains("SUPER_ADMIN")) allowedRoles = ALL_ROLES;
+
         String audienceFilter = allowedRoles.stream()
                 .map(value -> "'" + escape(value) + "'")
                 .reduce((left, right) -> left + "," + right)
                 .orElse("'PUBLIC'");
-        String filter = "school_id == '" + escape(schoolId.toString()) + "' && audience_role in ["
-                + audienceFilter + "]";
+        String filter = "school_id == '" + escape(schoolId.toString()) + "' && audience_role in [" + audienceFilter + "]";
         return vectorStore.similaritySearch(SearchRequest.builder()
                         .query(question.trim())
                         .topK(Math.max(1, Math.min(topK, 20)))
@@ -80,9 +78,7 @@ public class RagService {
                 .toList();
     }
 
-    private String escape(String value) {
-        return value.replace("'", "''");
-    }
+    private String escape(String value) { return value.replace("'", "''"); }
 
     public record RagResult(String content, String title, String source, String documentId) {}
 }
