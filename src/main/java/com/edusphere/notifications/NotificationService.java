@@ -18,8 +18,11 @@ public class NotificationService {
     private static final int MAX_ATTEMPTS = 5;
     private final NotificationRepository repository;
     private final JdbcTemplate jdbc;
+    private final EmailNotificationProvider emailProvider;
 
-    public NotificationService(NotificationRepository repository, JdbcTemplate jdbc) { this.repository = repository; this.jdbc = jdbc; }
+    public NotificationService(NotificationRepository repository, JdbcTemplate jdbc, EmailNotificationProvider emailProvider) {
+        this.repository = repository; this.jdbc = jdbc; this.emailProvider = emailProvider;
+    }
 
     @Transactional
     public NotificationView enqueue(UUID schoolId, UUID recipientUserId, String channel, String subject, String body) {
@@ -40,19 +43,27 @@ public class NotificationService {
         notification.markRead(); return view(repository.save(notification));
     }
     @Transactional
-    public int deliverableBatch() {
-        int processed = 0;
-        for (Notification n : repository.findTop100ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAsc("PENDING", Instant.now())) {
-            if ("IN_APP".equals(n.getChannel())) { n.markSent(); repository.save(n); processed++; }
-        }
-        return processed;
-    }
+    public int deliverableBatch() { return 0; }
+
     @Transactional
     public boolean deliverClaimed(UUID notificationId, String workerId) {
         Notification n = repository.findById(notificationId).orElse(null);
         if (n == null || !"PENDING".equals(n.getStatus()) || !n.isClaimedBy(workerId)) return false;
-        if ("IN_APP".equals(n.getChannel())) { n.markSent(); repository.save(n); return true; }
-        return false;
+        try {
+            if ("IN_APP".equals(n.getChannel())) {
+                n.markSent(); repository.save(n); return true;
+            }
+            if ("EMAIL".equals(n.getChannel())) {
+                String email = jdbc.queryForObject("SELECT email FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE'", String.class, n.getRecipientUserId(), n.getSchoolId());
+                emailProvider.send(email, n.getSubject(), n.getBody());
+                n.markSent(); repository.save(n); return true;
+            }
+            markFailed(n.getSchoolId(), n.getId(), "SMS provider is not configured");
+            return false;
+        } catch (Exception ex) {
+            markFailed(n.getSchoolId(), n.getId(), ex.getMessage());
+            return false;
+        }
     }
     @Transactional
     public NotificationView markFailed(UUID schoolId, UUID notificationId, String error) {
