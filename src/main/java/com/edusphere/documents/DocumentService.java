@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -55,8 +54,8 @@ public class DocumentService {
     }
 
     private String normalizeAudience(String value) {
-        if (value == null || value.isBlank()) return null;
-        String audience = value.trim().toUpperCase(Locale.ROOT);
+        String audience = DocumentAudience.normalize(value);
+        if ("PUBLIC".equals(audience)) return null;
         if (!AUDIENCES.contains(audience)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid audienceRole");
         return audience;
     }
