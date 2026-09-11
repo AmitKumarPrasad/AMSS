@@ -4,12 +4,10 @@ import com.edusphere.documents.Document;
 import com.edusphere.documents.DocumentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.document.Document as AiDocument;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,7 +45,8 @@ class RagServiceTest {
         verify(vectorStore, times(2)).delete(ids.capture());
         assertThat(ids.getAllValues()).hasSize(2);
         assertThat(ids.getAllValues().get(0)).isEqualTo(ids.getAllValues().get(1));
-        assertThat(ids.getValue()).first().asString().startsWith(documentId + ":");
+        assertThat((List<?>) ids.getValue()).isNotEmpty();
+        assertThat(((List<?>) ids.getValue()).get(0).toString()).startsWith(documentId + ":");
         verify(vectorStore, times(2)).add(any());
     }
 
