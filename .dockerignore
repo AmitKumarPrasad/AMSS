@@ -1,0 +1,12 @@
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.iml
+data/
+.env
+.env.*
+!.env.example
+ai-orchestrator/__pycache__/
+ai-orchestrator/.venv/
