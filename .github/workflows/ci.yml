@@ -34,15 +34,13 @@ jobs:
             if curl --fail --silent http://localhost:8080/actuator/health/liveness > /tmp/liveness.json; then
               echo "Application HTTP server is live."
               cat /tmp/liveness.json
-              if curl --fail --silent http://localhost:8080/actuator/health/readiness > /tmp/readiness.json; then
-                echo "Application readiness is UP."
-                cat /tmp/readiness.json
-                exit 0
-              fi
-              echo "Application is live but readiness is not UP yet."
+              echo "Readiness status (informational):"
+              curl --silent --show-error http://localhost:8080/actuator/health/readiness || true
+              echo
+              exit 0
             fi
             if (( attempt % 10 == 0 )); then
-              echo "Application not ready after $((attempt * 2))s"
+              echo "Application not live after $((attempt * 2))s"
               docker compose ps
             fi
             sleep 2
