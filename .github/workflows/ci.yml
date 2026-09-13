@@ -31,9 +31,15 @@ jobs:
           trap 'docker compose down --volumes --remove-orphans' EXIT
           docker compose up -d --build app
           for attempt in {1..150}; do
-            if curl --fail --silent http://localhost:8080/actuator/health/readiness > /tmp/health.json; then
-              cat /tmp/health.json
-              exit 0
+            if curl --fail --silent http://localhost:8080/actuator/health/liveness > /tmp/liveness.json; then
+              echo "Application HTTP server is live."
+              cat /tmp/liveness.json
+              if curl --fail --silent http://localhost:8080/actuator/health/readiness > /tmp/readiness.json; then
+                echo "Application readiness is UP."
+                cat /tmp/readiness.json
+                exit 0
+              fi
+              echo "Application is live but readiness is not UP yet."
             fi
             if (( attempt % 10 == 0 )); then
               echo "Application not ready after $((attempt * 2))s"
@@ -42,6 +48,12 @@ jobs:
             sleep 2
           done
           docker compose ps
+          echo "Final liveness response:"
+          curl --silent --show-error http://localhost:8080/actuator/health/liveness || true
+          echo
+          echo "Final readiness response:"
+          curl --silent --show-error http://localhost:8080/actuator/health/readiness || true
+          echo
           docker compose logs --no-color app
           docker compose logs --no-color postgres redis
           exit 1
