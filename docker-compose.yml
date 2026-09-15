@@ -30,6 +30,7 @@ services:
     ports: ["8080:8080"]
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      SPRING_AI_MCP_SERVER_ENABLED: ${SPRING_AI_MCP_SERVER_ENABLED:-false}
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-edusphere}
       DB_USERNAME: ${POSTGRES_USER:-edusphere}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-edusphere}
@@ -50,7 +51,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/actuator/health/readiness >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/actuator/health/liveness >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
