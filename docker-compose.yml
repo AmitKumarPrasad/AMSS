@@ -37,6 +37,7 @@ services:
       REDIS_PORT: 6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY before starting the app}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a strong random secret before starting the app}
+      JWT_ISSUER: ${JWT_ISSUER:?Set JWT_ISSUER before starting the app}
       DOCUMENT_STORAGE_PROVIDER: local
       DOCUMENT_STORAGE_ROOT: /app/data/documents
       LANGGRAPH_BASE_URL: ${LANGGRAPH_BASE_URL:-http://host.docker.internal:8123}
