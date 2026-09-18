@@ -30,7 +30,7 @@ public class FeeService {
             bad("studentId, invoiceNumber, dueDate and amount are required");
         }
         String number = requiredText(request.invoiceNumber(), "invoiceNumber");
-        requireStudent(schoolId, request.studentId());
+        requireActiveStudent(schoolId, request.studentId());
         if (request.amount().signum() <= 0) bad("amount must be greater than zero");
         if (invoiceRepository.existsBySchoolIdAndInvoiceNumber(schoolId, number)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invoice number already exists");
@@ -79,6 +79,14 @@ public class FeeService {
     private void requireStudent(UUID schoolId, UUID studentId) {
         studentRepository.findById(studentId).filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+    }
+    private void requireActiveStudent(UUID schoolId, UUID studentId) {
+        var student = studentRepository.findById(studentId)
+                .filter(s -> schoolId.equals(s.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+        if (!"ACTIVE".equals(student.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fees can only be created for an active student");
+        }
     }
     private String requiredText(String value, String field) {
         String normalized = value == null ? null : value.trim();
