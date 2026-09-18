@@ -11,6 +11,7 @@ public interface FeeInvoiceRepository extends JpaRepository<FeeInvoice, UUID> {
     boolean existsBySchoolIdAndInvoiceNumber(UUID schoolId, String invoiceNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    java.util.Optional<FeeInvoice> findByIdForUpdate(UUID id);
+    java.util.Optional<FeeInvoice> findById(UUID id);
+
     List<FeeInvoice> findBySchoolIdAndStudentIdOrderByDueDateDesc(UUID schoolId, UUID studentId);
 }
