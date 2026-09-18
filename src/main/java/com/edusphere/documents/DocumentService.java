@@ -33,13 +33,17 @@ public class DocumentService {
 
     @Transactional
     public DocumentView register(UUID schoolId, CreateDocumentRequest request, UUID uploadedBy) {
-        String key = request.storageKey().trim();
+        if (schoolId == null || uploadedBy == null || request == null) bad("schoolId, uploadedBy and document request are required");
+        String title = requiredText(request.title(), "title");
+        String fileName = requiredText(request.fileName(), "fileName");
+        String contentType = requiredText(request.contentType(), "contentType");
+        String key = requiredText(request.storageKey(), "storageKey");
         if (repository.existsBySchoolIdAndStorageKey(schoolId, key)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Document storage key already exists");
         }
         String audience = normalizeAudience(request.audienceRole());
-        Document document = new Document(schoolId, request.title().trim(), trimNullable(request.description()),
-                request.fileName().trim(), request.contentType().trim(), key, trimNullable(request.checksum()), audience, uploadedBy);
+        Document document = new Document(schoolId, title, trimNullable(request.description()),
+                sanitizeFileName(fileName), contentType, key, trimNullable(request.checksum()), audience, uploadedBy);
         Document saved = repository.save(document);
         auditService.record(schoolId, uploadedBy, "DOCUMENT_REGISTERED", "DOCUMENT", saved.getId(),
                 "{\"title\":\"" + jsonEscape(saved.getTitle()) + "\",\"storageKey\":\"" + jsonEscape(saved.getStorageKey()) + "\"}");
@@ -49,9 +53,8 @@ public class DocumentService {
     @Transactional
     public DocumentView upload(UUID schoolId, MultipartFile file, String title, String description,
                                String audienceRole, UUID uploadedBy) {
-        if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "file must not be empty");
-        }
+        if (schoolId == null || uploadedBy == null) bad("schoolId and uploadedBy are required");
+        if (file == null || file.isEmpty()) bad("file must not be empty");
         String fileName = sanitizeFileName(file.getOriginalFilename());
         String contentType = file.getContentType() == null || file.getContentType().isBlank()
                 ? "application/octet-stream" : file.getContentType().trim();
@@ -83,6 +86,7 @@ public class DocumentService {
 
     @Transactional(readOnly = true)
     public List<DocumentView> list(UUID schoolId, boolean publishedOnly, Collection<String> roles) {
+        if (schoolId == null) bad("schoolId is required");
         List<Document> documents = publishedOnly
                 ? repository.findBySchoolIdAndStatusOrderByCreatedAtDesc(schoolId, "PUBLISHED")
                 : repository.findBySchoolIdOrderByCreatedAtDesc(schoolId);
@@ -95,6 +99,8 @@ public class DocumentService {
     @Transactional
     public DocumentView publish(UUID schoolId, UUID documentId) {
         Document document = get(schoolId, documentId);
+        if ("PUBLISHED".equals(document.getStatus())) bad("Document is already published");
+        if (!"DRAFT".equals(document.getStatus())) bad("Only draft documents can be published");
         document.publish();
         return toView(repository.save(document));
     }
@@ -102,11 +108,14 @@ public class DocumentService {
     @Transactional
     public DocumentView archive(UUID schoolId, UUID documentId) {
         Document document = get(schoolId, documentId);
+        if ("ARCHIVED".equals(document.getStatus())) bad("Document is already archived");
+        if (!"PUBLISHED".equals(document.getStatus())) bad("Only published documents can be archived");
         document.archive();
         return toView(repository.save(document));
     }
 
     private Document get(UUID schoolId, UUID id) {
+        if (schoolId == null || id == null) bad("schoolId and documentId are required");
         return repository.findById(id).filter(d -> schoolId.equals(d.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
     }
@@ -114,7 +123,7 @@ public class DocumentService {
     private String normalizeAudience(String value) {
         String audience = DocumentAudience.normalize(value);
         if ("PUBLIC".equals(audience)) return null;
-        if (!AUDIENCES.contains(audience)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid audienceRole");
+        if (!AUDIENCES.contains(audience)) bad("invalid audienceRole");
         return audience;
     }
 
@@ -152,7 +161,12 @@ public class DocumentService {
     }
 
     private String trimNullable(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+    private String requiredText(String value, String field) {
+        if (value == null || value.isBlank()) bad(field + " is required");
+        return value.trim();
+    }
     private String jsonEscape(String value) { return value.replace("\\", "\\\\").replace("\"", "\\\""); }
+    private void bad(String message) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
     private DocumentView toView(Document d) {
         return new DocumentView(d.getId(), d.getSchoolId(), d.getTitle(), d.getDescription(), d.getFileName(),
                 d.getContentType(), d.getStorageKey(), d.getChecksum(), d.getAudienceRole(), d.getStatus(), d.getUploadedBy(),
