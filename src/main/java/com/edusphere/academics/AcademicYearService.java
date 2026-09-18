@@ -29,6 +29,22 @@ public class AcademicYearService {
         return view(year);
     }
 
+    @Transactional
+    public AcademicYearView changeStatus(UUID schoolId, UUID academicYearId, boolean active) {
+        AcademicYear year = repository.findById(academicYearId)
+                .filter(y -> schoolId.equals(y.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found"));
+        if (active) {
+            if (repository.existsBySchoolIdAndStatus(schoolId, "ACTIVE") && !"ACTIVE".equals(year.getStatus())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Another academic year is already active");
+            }
+            year.activate();
+        } else {
+            year.deactivate();
+        }
+        return view(repository.save(year));
+    }
+
     @Transactional(readOnly=true)
     public List<AcademicYearView> list(UUID schoolId){
         return repository.findBySchoolIdOrderByStartsOnDesc(schoolId).stream().map(this::view).toList();
