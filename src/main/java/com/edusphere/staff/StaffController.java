@@ -18,6 +18,13 @@ public class StaffController {
     public StaffController(StaffService service,TenantAccess tenantAccess){this.service=service;this.tenantAccess=tenantAccess;}
     @PostMapping @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
     public StaffService.StaffView create(@PathVariable UUID schoolId,@Valid @RequestBody CreateStaff r,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.create(schoolId,new StaffService.CreateStaffRequest(r.employeeCode(),r.fullName(),r.email(),r.phone(),r.designation(),r.employmentType(),r.joinedOn()));}
+    @PatchMapping("/{staffId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public StaffService.StaffView changeStatus(@PathVariable UUID schoolId,@PathVariable UUID staffId,
+                                                @RequestParam boolean active,Authentication a){
+        tenantAccess.requireSchool(a,schoolId);
+        return service.changeStatus(schoolId,staffId,active);
+    }
     @GetMapping @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public List<StaffService.StaffView> list(@PathVariable UUID schoolId,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.list(schoolId);}
     @PostMapping("/{staffId}/leave") @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
