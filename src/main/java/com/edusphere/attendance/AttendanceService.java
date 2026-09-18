@@ -41,7 +41,7 @@ public class AttendanceService {
 
         AttendanceRecord record = attendanceRepository
                 .findBySchoolIdAndStudentIdAndAttendanceDate(schoolId, student.getId(), date)
-                .orElseGet(() -> new AttendanceRecord(schoolId, student.getId(), date,
+                .orElseGet(() -> new AttendanceRecord(schoolId, studentId, date,
                         normalizedStatus, "MANUAL", recordedBy));
         if (record.getId() != null) record.update(normalizedStatus, "MANUAL", recordedBy);
         return toView(attendanceRepository.save(record));
