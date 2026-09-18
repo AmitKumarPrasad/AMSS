@@ -46,6 +46,8 @@ public class AssessmentService {
 
     @Transactional
     public AssessmentView create(UUID schoolId, CreateAssessmentRequest request) {
+        if (request == null || request.academicYearId() == null || request.classId() == null || request.assessmentDate() == null || request.maxMarks() == null) bad("academicYearId, classId, assessmentDate and maxMarks are required");
+        if (request.name() == null || request.name().isBlank()) bad("name is required");
         requireAcademicYear(schoolId, request.academicYearId());
         requireClass(schoolId, request.classId());
         if (!request.academicYearId().equals(requireClass(schoolId, request.classId()).getAcademicYearId())) {
