@@ -32,6 +32,9 @@ public class AttendanceService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
 
         if (date == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate is required");
+        if (date.isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate cannot be in the future");
+        }
         if (!"ACTIVE".equals(student.getStatus())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attendance can only be recorded for an active student");
         String normalizedStatus = status == null ? "" : status.trim().toUpperCase(Locale.ROOT);
         if (!VALID_STATUSES.contains(normalizedStatus)) {
