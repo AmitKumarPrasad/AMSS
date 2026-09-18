@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/v1/schools/{schoolId}/classes")
+@RestController @RequestMapping("/api/v1/schools/{schoolId}/classes")
 public class SchoolClassController {
     private final SchoolClassService service; private final TenantAccess tenantAccess;
     public SchoolClassController(SchoolClassService service,TenantAccess tenantAccess){this.service=service;this.tenantAccess=tenantAccess;}
@@ -19,5 +18,7 @@ public class SchoolClassController {
     public List<SchoolClassService.ClassView> list(@PathVariable UUID schoolId,@RequestParam UUID academicYearId,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.list(schoolId,academicYearId);}
     @PostMapping @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
     public SchoolClassService.ClassView create(@PathVariable UUID schoolId,@Valid @RequestBody CreateRequest r,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.create(schoolId,r.academicYearId(),new SchoolClassService.CreateClassRequest(r.name(),r.gradeLevel()));}
+    @PatchMapping("/{classId}/status") @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public SchoolClassService.ClassView changeStatus(@PathVariable UUID schoolId,@PathVariable UUID classId,@RequestParam boolean active,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.changeStatus(schoolId,classId,active);}
     public record CreateRequest(@NotNull UUID academicYearId,@NotBlank String name,@NotNull Integer gradeLevel){}
 }
