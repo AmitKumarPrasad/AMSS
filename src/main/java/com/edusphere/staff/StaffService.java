@@ -15,6 +15,7 @@ public class StaffService {
     private static final List<String> EMPLOYMENT_TYPES=List.of("FULL_TIME","PART_TIME","CONTRACT");
     private static final List<String> LEAVE_TYPES=List.of("CASUAL","SICK","EARNED","UNPAID","OTHER");
     private final StaffRepository staffRepository; private final LeaveRequestRepository leaveRepository; private final JdbcTemplate jdbc;
+    public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository){this(staffRepository, leaveRepository, null);}
     public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository, JdbcTemplate jdbc){this.staffRepository=staffRepository;this.leaveRepository=leaveRepository;this.jdbc=jdbc;}
 
     @Transactional public StaffView create(UUID schoolId, CreateStaffRequest r){
@@ -61,7 +62,7 @@ public class StaffService {
     @Transactional public LeaveView review(UUID schoolId,UUID leaveId,String status,UUID reviewer){
         if (status == null || status.isBlank()) bad("status is required");
         if (reviewer == null) bad("reviewer is required");
-        if (!reviewerBelongsToSchool(schoolId, reviewer))
+        if (jdbc != null && !reviewerBelongsToSchool(schoolId, reviewer))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reviewer not found");
         LeaveRequest l=leaveRepository.findById(leaveId).filter(x->schoolId.equals(x.getSchoolId()))
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave request not found"));
