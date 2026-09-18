@@ -1,6 +1,7 @@
 package com.edusphere.staff;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,8 +14,8 @@ import java.util.UUID;
 public class StaffService {
     private static final List<String> EMPLOYMENT_TYPES=List.of("FULL_TIME","PART_TIME","CONTRACT");
     private static final List<String> LEAVE_TYPES=List.of("CASUAL","SICK","EARNED","UNPAID","OTHER");
-    private final StaffRepository staffRepository; private final LeaveRequestRepository leaveRepository;
-    public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository){this.staffRepository=staffRepository;this.leaveRepository=leaveRepository;}
+    private final StaffRepository staffRepository; private final LeaveRequestRepository leaveRepository; private final JdbcTemplate jdbc;
+    public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository, JdbcTemplate jdbc){this.staffRepository=staffRepository;this.leaveRepository=leaveRepository;this.jdbc=jdbc;}
 
     @Transactional public StaffView create(UUID schoolId, CreateStaffRequest r){
         if (r == null || r.employeeCode() == null || r.fullName() == null || r.designation() == null)
@@ -60,6 +61,8 @@ public class StaffService {
     @Transactional public LeaveView review(UUID schoolId,UUID leaveId,String status,UUID reviewer){
         if (status == null || status.isBlank()) bad("status is required");
         if (reviewer == null) bad("reviewer is required");
+        if (!reviewerBelongsToSchool(schoolId, reviewer))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reviewer not found");
         LeaveRequest l=leaveRepository.findById(leaveId).filter(x->schoolId.equals(x.getSchoolId()))
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave request not found"));
         String s=status.trim().toUpperCase(Locale.ROOT);
@@ -69,6 +72,11 @@ public class StaffService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
         l.review(s,reviewer); return leave(leaveRepository.save(l));
     }
+    private boolean reviewerBelongsToSchool(UUID schoolId, UUID reviewerId) {
+        return Boolean.TRUE.equals(jdbc.query("SELECT EXISTS (SELECT 1 FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE')",
+                rs -> { rs.next(); return rs.getBoolean(1); }, reviewerId, schoolId));
+    }
+
     private String normalizeType(String v){String s=v==null?"FULL_TIME":v.trim().toUpperCase(Locale.ROOT);if(!EMPLOYMENT_TYPES.contains(s))bad("Invalid employmentType");return s;}
     private String requiredText(String value,String field){String s=value==null?null:value.trim();if(s==null||s.isBlank())bad(field+" is required");return s;}
     private String trim(String s){return s==null||s.isBlank()?null:s.trim();}
