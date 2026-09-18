@@ -6,14 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -25,25 +18,30 @@ public class EnrollmentController {
     private final TenantAccess tenantAccess;
 
     public EnrollmentController(EnrollmentService enrollmentService, TenantAccess tenantAccess) {
-        this.enrollmentService = enrollmentService;
-        this.tenantAccess = tenantAccess;
+        this.enrollmentService = enrollmentService; this.tenantAccess = tenantAccess;
     }
 
     @PostMapping("/sections/{sectionId}/students")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
     public EnrollmentService.EnrollmentView enroll(@PathVariable UUID schoolId, @PathVariable UUID sectionId,
-                                                    @Valid @RequestBody EnrollStudentRequest request,
-                                                    Authentication authentication) {
+                                                    @Valid @RequestBody EnrollStudentRequest request, Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return enrollmentService.enroll(schoolId, sectionId,
                 new EnrollmentService.EnrollStudentRequest(request.studentId(), request.enrolledOn()));
     }
 
+    @PatchMapping("/{enrollmentId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public EnrollmentService.EnrollmentView changeStatus(@PathVariable UUID schoolId, @PathVariable UUID enrollmentId,
+                                                          @RequestParam boolean active, Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return enrollmentService.changeStatus(schoolId, enrollmentId, active);
+    }
+
     @GetMapping("/sections/{sectionId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
-    public List<EnrollmentService.EnrollmentView> listBySection(@PathVariable UUID schoolId,
-                                                                 @PathVariable UUID sectionId,
+    public List<EnrollmentService.EnrollmentView> listBySection(@PathVariable UUID schoolId, @PathVariable UUID sectionId,
                                                                  Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return enrollmentService.listBySection(schoolId, sectionId);
@@ -51,8 +49,7 @@ public class EnrollmentController {
 
     @GetMapping("/students/{studentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
-    public List<EnrollmentService.EnrollmentView> listByStudent(@PathVariable UUID schoolId,
-                                                                 @PathVariable UUID studentId,
+    public List<EnrollmentService.EnrollmentView> listByStudent(@PathVariable UUID schoolId, @PathVariable UUID studentId,
                                                                  Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return enrollmentService.listByStudent(schoolId, studentId);
