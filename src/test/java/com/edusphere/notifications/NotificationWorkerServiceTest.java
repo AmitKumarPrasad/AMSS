@@ -2,7 +2,6 @@ package com.edusphere.notifications;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,8 +25,12 @@ class NotificationWorkerServiceTest {
     @Mock
     private Notification notification;
 
-    @InjectMocks
     private NotificationWorkerService worker;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        worker = new NotificationWorkerService(repository, notificationService, 300);
+    }
 
     @Test
     void claimBatchClaimsOnlyRowsWonByAtomicUpdate() {
