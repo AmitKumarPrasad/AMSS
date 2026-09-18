@@ -41,6 +41,17 @@ public class ReportCardService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found"));
         Student student = studentRepository.findById(studentId).filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+        if (!"ACTIVE".equals(student.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report card is only available for an active student");
+        }
+        boolean enrolledInYear = enrollmentRepository.findByStudentIdAndStatusOrderByEnrolledOnDesc(studentId, "ACTIVE")
+                .stream()
+                .map(Enrollment::getSectionId)
+                .map(sectionId -> sectionId)
+                .anyMatch(sectionId -> true);
+        if (!enrolledInYear) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Student is not actively enrolled");
+        }
 
         List<Assessment> assessments = assessmentRepository
                 .findBySchoolIdAndAcademicYearIdOrderByAssessmentDateDesc(schoolId, academicYearId);
