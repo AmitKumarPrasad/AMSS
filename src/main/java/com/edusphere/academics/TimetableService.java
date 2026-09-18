@@ -28,6 +28,7 @@ public class TimetableService {
 
     @Transactional
     public TimetableView create(UUID schoolId, UUID sectionId, CreateTimetableRequest request) {
+        if (request == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "timetable request is required");
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
         SchoolClass schoolClass = requireClass(schoolId, section.getClassId());
@@ -47,6 +48,15 @@ public class TimetableService {
         TimetableEntry saved = repository.save(new TimetableEntry(schoolId, sectionId, subject.getId(), day,
                 request.startsAt(), request.endsAt(), trimNullable(request.room())));
         return toView(saved);
+    }
+
+    @Transactional
+    public TimetableView changeStatus(UUID schoolId, UUID entryId, boolean active) {
+        TimetableEntry entry = repository.findById(entryId)
+                .filter(e -> schoolId.equals(e.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Timetable entry not found"));
+        if (active) entry.activate(); else entry.deactivate();
+        return toView(repository.save(entry));
     }
 
     @Transactional(readOnly = true)
