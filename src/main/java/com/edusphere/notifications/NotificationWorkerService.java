@@ -27,10 +27,10 @@ public class NotificationWorkerService {
         Instant now = Instant.now();
         List<Notification> candidates =
                 repository.findTop100ByStatusAndAvailableAtLessThanEqualAndClaimedByIsNullOrderByAvailableAtAsc("PENDING", now);
+
         return candidates.stream()
                 .filter(n -> repository.claim(n.getId(), workerId, now, now, "PENDING") == 1)
-                .map(n -> repository.findById(n.getId()).orElse(null))
-                .filter(java.util.Objects::nonNull)
+                .peek(n -> n.claim(workerId))
                 .toList();
     }
 
@@ -38,22 +38,14 @@ public class NotificationWorkerService {
     @Transactional
     public void runWorker() {
         releaseExpiredClaims();
-        String workerId = "amss-worker-" + java.util.UUID.randomUUID();
+        String workerId = "amss-worker-" + UUID.randomUUID();
         claimBatch(workerId).forEach(n -> process(workerId, n.getId()));
     }
 
     @Transactional
     public int releaseExpiredClaims() {
-        Instant now = Instant.now();
-        int released = 0;
-        for (Notification n : repository.findAll()) {
-            if ("PENDING".equals(n.getStatus()) && n.claimExpired(now, CLAIM_LEASE_SECONDS)) {
-                n.releaseClaim();
-                repository.save(n);
-                released++;
-            }
-        }
-        return released;
+        Instant cutoff = Instant.now().minusSeconds(CLAIM_LEASE_SECONDS);
+        return repository.releaseExpiredClaims(cutoff);
     }
 
     @Transactional
