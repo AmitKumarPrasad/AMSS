@@ -80,6 +80,7 @@ app:
 notifications:
   worker:
     interval-ms: ${NOTIFICATIONS_WORKER_INTERVAL_MS:10000}
+    claim-lease-seconds: ${NOTIFICATIONS_WORKER_CLAIM_LEASE_SECONDS:300}
   email:
     enabled: ${NOTIFICATIONS_EMAIL_ENABLED:false}
     from: ${NOTIFICATIONS_EMAIL_FROM:no-reply@amss.local}
