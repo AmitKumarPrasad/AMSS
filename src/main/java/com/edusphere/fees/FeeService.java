@@ -51,7 +51,7 @@ public class FeeService {
         if (request == null || request.paymentReference() == null || request.amount() == null) {
             bad("paymentReference and amount are required");
         }
-        FeeInvoice invoice = invoiceRepository.findByIdForUpdate(invoiceId)
+        FeeInvoice invoice = invoiceRepository.findById(invoiceId)
                 .filter(i -> schoolId.equals(i.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found"));
         if (request.amount().signum() <= 0) bad("amount must be greater than zero");
