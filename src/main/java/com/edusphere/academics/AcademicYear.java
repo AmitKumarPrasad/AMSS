@@ -24,6 +24,8 @@ public class AcademicYear {
         this.id=UUID.randomUUID(); this.schoolId=schoolId; this.code=code; this.name=name;
         this.startsOn=startsOn; this.endsOn=endsOn; this.status="PLANNED";
     }
+    public void activate(){this.status="ACTIVE";}
+    public void deactivate(){this.status="INACTIVE";}
     public UUID getId(){return id;} public UUID getSchoolId(){return schoolId;} public String getCode(){return code;}
     public String getName(){return name;} public LocalDate getStartsOn(){return startsOn;} public LocalDate getEndsOn(){return endsOn;} public String getStatus(){return status;}
 }
