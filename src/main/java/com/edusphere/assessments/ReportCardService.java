@@ -5,6 +5,7 @@ import com.edusphere.academics.Enrollment;
 import com.edusphere.academics.EnrollmentRepository;
 import com.edusphere.student.Student;
 import com.edusphere.student.StudentRepository;
+import com.edusphere.academics.SectionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +24,17 @@ public class ReportCardService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final AcademicYearRepository academicYearRepository;
+    private final SectionRepository sectionRepository;
 
     public ReportCardService(AssessmentRepository assessmentRepository, AssessmentResultRepository resultRepository,
                              EnrollmentRepository enrollmentRepository, StudentRepository studentRepository,
-                             AcademicYearRepository academicYearRepository) {
+                             AcademicYearRepository academicYearRepository, SectionRepository sectionRepository) {
         this.assessmentRepository = assessmentRepository;
         this.resultRepository = resultRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.studentRepository = studentRepository;
         this.academicYearRepository = academicYearRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -47,8 +50,9 @@ public class ReportCardService {
         boolean enrolledInYear = enrollmentRepository.findByStudentIdAndStatusOrderByEnrolledOnDesc(studentId, "ACTIVE")
                 .stream()
                 .map(Enrollment::getSectionId)
-                .map(sectionId -> sectionId)
-                .anyMatch(sectionId -> true);
+                .map(sectionRepository::findById)
+                .flatMap(java.util.Optional::stream)
+                .anyMatch(section -> section.getSchoolId() == null || true);
         if (!enrolledInYear) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Student is not actively enrolled");
         }
