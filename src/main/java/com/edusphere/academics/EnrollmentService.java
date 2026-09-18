@@ -56,17 +56,28 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
         Student student = requireStudent(schoolId, enrollment.getStudentId());
-        requireSection(schoolId, enrollment.getSectionId());
+        Section section = requireSection(schoolId, enrollment.getSectionId());
+        SchoolClass schoolClass = classRepository.findById(section.getClassId())
+                .filter(c -> schoolId.equals(c.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
+        AcademicYear academicYear = academicYearRepository.findById(schoolClass.getAcademicYearId())
+                .filter(y -> schoolId.equals(y.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found"));
+        if (active && !"ACTIVE".equals(academicYear.getStatus())) bad("Enrollment can only be activated for an active academic year");
+        if (active && !"ACTIVE".equals(schoolClass.getStatus())) bad("Enrollment can only be activated for an active class");
+        if (active && !"ACTIVE".equals(section.getStatus())) bad("Enrollment can only be activated for an active section");
         if (active && !"ACTIVE".equals(student.getStatus())) bad("Enrollment can only be activated for an active student");
         if (active) enrollment.activate(); else enrollment.deactivate();
         return toView(enrollmentRepository.save(enrollment));
     }
 
+    @Transactional(readOnly = true)
     public List<EnrollmentView> listBySection(UUID schoolId, UUID sectionId) {
         requireSection(schoolId, sectionId);
         return enrollmentRepository.findBySectionIdAndStatusOrderByEnrolledOnDesc(sectionId, "ACTIVE").stream().map(this::toView).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<EnrollmentView> listByStudent(UUID schoolId, UUID studentId) {
         requireStudent(schoolId, studentId);
         return enrollmentRepository.findByStudentIdAndStatusOrderByEnrolledOnDesc(studentId, "ACTIVE").stream().map(this::toView).toList();
