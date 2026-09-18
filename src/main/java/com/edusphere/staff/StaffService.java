@@ -2,6 +2,7 @@ package com.edusphere.staff;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,6 +17,7 @@ public class StaffService {
     private static final List<String> LEAVE_TYPES=List.of("CASUAL","SICK","EARNED","UNPAID","OTHER");
     private final StaffRepository staffRepository; private final LeaveRequestRepository leaveRepository; private final JdbcTemplate jdbc;
     public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository){this(staffRepository, leaveRepository, null);}
+    @Autowired
     public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository, JdbcTemplate jdbc){this.staffRepository=staffRepository;this.leaveRepository=leaveRepository;this.jdbc=jdbc;}
 
     @Transactional public StaffView create(UUID schoolId, CreateStaffRequest r){
