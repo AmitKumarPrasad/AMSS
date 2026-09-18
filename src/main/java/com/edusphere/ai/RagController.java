@@ -28,9 +28,14 @@ public class RagController {
     public Response query(@PathVariable UUID schoolId, @Valid @RequestBody Request request,
                           Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
+        String question = request.question().trim();
+        if (question.length() > 2000) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "question must not exceed 2000 characters");
+        }
         List<String> roles = authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList();
-        List<RagService.RagResult> evidence = service.search(schoolId, roles, request.question(), 8);
-        return new Response(assistant.answer(request.question(), evidence), evidence);
+        List<RagService.RagResult> evidence = service.search(schoolId, roles, question, 8);
+        return new Response(assistant.answer(question, evidence), evidence);
     }
 
     public record Request(@NotBlank String question) {}
