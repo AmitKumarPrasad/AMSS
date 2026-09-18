@@ -25,9 +25,13 @@ public class FeeService {
     }
 
     public InvoiceView createInvoice(UUID schoolId, CreateInvoiceRequest request) {
+        if (request == null || request.studentId() == null || request.invoiceNumber() == null
+                || request.dueDate() == null || request.amount() == null) {
+            bad("studentId, invoiceNumber, dueDate and amount are required");
+        }
         requireStudent(schoolId, request.studentId());
         if (request.amount().signum() <= 0) bad("amount must be greater than zero");
-        String number = request.invoiceNumber().trim();
+        String number = requiredText(request.invoiceNumber(), "invoiceNumber");
         if (invoiceRepository.existsBySchoolIdAndInvoiceNumber(schoolId, number)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invoice number already exists");
         }
@@ -44,6 +48,9 @@ public class FeeService {
 
     @Transactional
     public PaymentView recordPayment(UUID schoolId, UUID invoiceId, RecordPaymentRequest request) {
+        if (request == null || request.paymentReference() == null || request.amount() == null) {
+            bad("paymentReference and amount are required");
+        }
         FeeInvoice invoice = invoiceRepository.findById(invoiceId)
                 .filter(i -> schoolId.equals(i.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found"));
@@ -51,7 +58,7 @@ public class FeeService {
         if (request.amount().compareTo(invoice.getAmount().subtract(invoice.getPaidAmount())) > 0) {
             bad("payment exceeds outstanding balance");
         }
-        String reference = request.paymentReference().trim();
+        String reference = requiredText(request.paymentReference(), "paymentReference");
         if (paymentRepository.existsByPaymentReference(reference)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment reference already exists");
         }
@@ -72,6 +79,11 @@ public class FeeService {
     private void requireStudent(UUID schoolId, UUID studentId) {
         studentRepository.findById(studentId).filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+    }
+    private String requiredText(String value, String field) {
+        String normalized = value == null ? null : value.trim();
+        if (normalized == null || normalized.isBlank()) bad(field + " is required");
+        return normalized;
     }
     private void bad(String message) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
     private InvoiceView toView(FeeInvoice i) { return new InvoiceView(i.getId(), i.getSchoolId(), i.getStudentId(), i.getInvoiceNumber(), i.getDueDate(), i.getAmount(), i.getPaidAmount(), i.getStatus()); }
