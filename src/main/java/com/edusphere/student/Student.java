@@ -21,6 +21,8 @@ public class Student {
         this.schoolId = schoolId; this.admissionNumber = admissionNumber; this.firstName = firstName;
         this.lastName = lastName; this.dateOfBirth = dateOfBirth;
     }
+    public void deactivate() { this.status = "INACTIVE"; }
+    public void activate() { this.status = "ACTIVE"; }
     public UUID getId() { return id; }
     public UUID getSchoolId() { return schoolId; }
     public String getAdmissionNumber() { return admissionNumber; }
