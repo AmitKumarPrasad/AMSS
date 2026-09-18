@@ -30,6 +30,14 @@ public class TimetableController {
         return service.create(schoolId, sectionId, new TimetableService.CreateTimetableRequest(request.subjectId(), request.dayOfWeek(), request.startsAt(), request.endsAt(), request.room()));
     }
 
+    @PatchMapping("/{entryId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public TimetableService.TimetableView changeStatus(@PathVariable UUID schoolId, @PathVariable UUID entryId,
+                                                        @RequestParam boolean active, Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return service.changeStatus(schoolId, entryId, active);
+    }
+
     @GetMapping("/sections/{sectionId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public List<TimetableService.TimetableView> list(@PathVariable UUID schoolId, @PathVariable UUID sectionId, Authentication authentication) {
