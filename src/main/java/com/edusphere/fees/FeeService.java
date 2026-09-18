@@ -29,9 +29,9 @@ public class FeeService {
                 || request.dueDate() == null || request.amount() == null) {
             bad("studentId, invoiceNumber, dueDate and amount are required");
         }
+        String number = requiredText(request.invoiceNumber(), "invoiceNumber");
         requireStudent(schoolId, request.studentId());
         if (request.amount().signum() <= 0) bad("amount must be greater than zero");
-        String number = requiredText(request.invoiceNumber(), "invoiceNumber");
         if (invoiceRepository.existsBySchoolIdAndInvoiceNumber(schoolId, number)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Invoice number already exists");
         }
