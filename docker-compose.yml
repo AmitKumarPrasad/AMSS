@@ -42,10 +42,7 @@ services:
       DOCUMENT_STORAGE_PROVIDER: local
       DOCUMENT_STORAGE_ROOT: /app/data/documents
       LANGGRAPH_BASE_URL: ${LANGGRAPH_BASE_URL:-http://host.docker.internal:8123}
-      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:localhost}
-      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:2525}
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      NOTIFICATIONS_EMAIL_ENABLED: "false"
     volumes:
       - documents_data:/app/data/documents
     depends_on:
