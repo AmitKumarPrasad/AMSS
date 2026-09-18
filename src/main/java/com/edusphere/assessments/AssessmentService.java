@@ -72,6 +72,7 @@ public class AssessmentService {
     @Transactional
     public ResultView recordResult(UUID schoolId, UUID assessmentId, UUID studentId,
                                    BigDecimal marks, String grade, UUID recordedBy) {
+        if (assessmentId == null || studentId == null || marks == null) bad("assessmentId, studentId and marks are required");
         Assessment assessment = assessmentRepository.findByIdAndSchoolId(assessmentId, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assessment not found"));
         if (marks.signum() < 0 || marks.compareTo(assessment.getMaxMarks()) > 0) {
