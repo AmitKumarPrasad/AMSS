@@ -40,7 +40,7 @@ public class AttendanceService {
         }
 
         AttendanceRecord record = attendanceRepository
-                .findBySchoolIdAndStudentIdAndAttendanceDate(schoolId, student.getId(), date)
+                .findBySchoolIdAndStudentIdAndAttendanceDate(schoolId, studentId, date)
                 .orElseGet(() -> new AttendanceRecord(schoolId, studentId, date,
                         normalizedStatus, "MANUAL", recordedBy));
         if (record.getId() != null) record.update(normalizedStatus, "MANUAL", recordedBy);
