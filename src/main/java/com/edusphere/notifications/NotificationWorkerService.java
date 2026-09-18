@@ -1,7 +1,7 @@
 package com.edusphere.notifications;
 
-import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -24,18 +24,15 @@ public class NotificationWorkerService {
         if (workerId == null || workerId.isBlank()) {
             throw new IllegalArgumentException("workerId is required");
         }
-        Instant now = Instant.now();
-        List<Notification> candidates =
-                repository.findTop100ByStatusAndAvailableAtLessThanEqualAndClaimedByIsNullOrderByAvailableAtAsc("PENDING", now);
 
-        return candidates.stream()
+        Instant now = Instant.now();
+        return repository.findTop100ByStatusAndAvailableAtLessThanEqualAndClaimedByIsNullOrderByAvailableAtAsc("PENDING", now)
+                .stream()
                 .filter(n -> repository.claim(n.getId(), workerId, now, now, "PENDING") == 1)
-                .peek(n -> n.claim(workerId))
                 .toList();
     }
 
     @Scheduled(fixedDelayString = "${notifications.worker.interval-ms:10000}")
-    @Transactional
     public void runWorker() {
         releaseExpiredClaims();
         String workerId = "amss-worker-" + UUID.randomUUID();
