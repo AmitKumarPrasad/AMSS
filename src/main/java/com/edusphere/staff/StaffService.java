@@ -47,6 +47,7 @@ public class StaffService {
                 .filter(s->schoolId.equals(s.getSchoolId())&&"ACTIVE".equals(s.getStatus()))
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Staff member not found"));
         if(r.startsOn().isAfter(r.endsOn())) bad("startsOn must be on or before endsOn");
+        if (r.startsOn().isBefore(LocalDate.now())) bad("startsOn cannot be in the past");
         String type=requiredText(r.leaveType(),"leaveType").toUpperCase(Locale.ROOT);
         if(!LEAVE_TYPES.contains(type)) bad("Invalid leaveType");
         if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"APPROVED",r.endsOn(),r.startsOn()))
