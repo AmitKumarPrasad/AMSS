@@ -28,6 +28,9 @@ public class StaffAttendanceService {
         String status = normalizeStatus(request.status());
         LocalDate date = request.attendanceDate();
         if (date == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate is required");
+        if (date.isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate cannot be in the future");
+        }
 
         StaffAttendanceRecord record = attendanceRepository.findByStaffIdAndAttendanceDate(staffId, date)
                 .filter(existing -> schoolId.equals(existing.getSchoolId()))
