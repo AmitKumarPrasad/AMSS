@@ -23,6 +23,7 @@ public class StaffAttendanceService {
 
     @Transactional
     public AttendanceView record(UUID schoolId, UUID staffId, RecordAttendanceRequest request, UUID recordedBy) {
+        if (request == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendance request is required");
         requireActiveStaff(schoolId, staffId);
         String status = normalizeStatus(request.status());
         LocalDate date = request.attendanceDate();
@@ -37,7 +38,7 @@ public class StaffAttendanceService {
 
     @Transactional(readOnly = true)
     public List<AttendanceView> history(UUID schoolId, UUID staffId, LocalDate from, LocalDate to) {
-        requireActiveStaff(schoolId, staffId);
+        requireStaff(schoolId, staffId);
         LocalDate effectiveTo = to == null ? LocalDate.now() : to;
         LocalDate effectiveFrom = from == null ? effectiveTo.minusDays(30) : from;
         if (effectiveFrom.isAfter(effectiveTo)) {
@@ -47,10 +48,18 @@ public class StaffAttendanceService {
                         schoolId, staffId, effectiveFrom, effectiveTo).stream().map(this::view).toList();
     }
 
-    private StaffMember requireActiveStaff(UUID schoolId, UUID staffId) {
+    private StaffMember requireStaff(UUID schoolId, UUID staffId) {
         return staffRepository.findById(staffId)
-                .filter(s -> schoolId.equals(s.getSchoolId()) && "ACTIVE".equals(s.getStatus()))
+                .filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff member not found"));
+    }
+
+    private StaffMember requireActiveStaff(UUID schoolId, UUID staffId) {
+        StaffMember staff = requireStaff(schoolId, staffId);
+        if (!"ACTIVE".equals(staff.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attendance can only be recorded for an active staff member");
+        }
+        return staff;
     }
 
     private String normalizeStatus(String value) {
