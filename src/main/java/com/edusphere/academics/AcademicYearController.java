@@ -18,6 +18,16 @@ public class AcademicYearController {
     private final AcademicYearService service; private final TenantAccess tenantAccess;
     public AcademicYearController(AcademicYearService service,TenantAccess tenantAccess){this.service=service;this.tenantAccess=tenantAccess;}
 
+    @PatchMapping("/{academicYearId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public AcademicYearService.AcademicYearView changeStatus(@PathVariable UUID schoolId,
+                                                               @PathVariable UUID academicYearId,
+                                                               @RequestParam boolean active,
+                                                               Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return service.changeStatus(schoolId, academicYearId, active);
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public List<AcademicYearService.AcademicYearView> list(@PathVariable UUID schoolId,Authentication authentication){
