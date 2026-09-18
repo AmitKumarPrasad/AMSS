@@ -22,6 +22,7 @@ public class StudentGuardianService {
 
     @Transactional
     public GuardianView create(UUID schoolId, UUID studentId, CreateGuardianRequest request) {
+        if (request == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "guardian request is required");
         Student student = studentRepository.findById(studentId)
                 .filter(s -> schoolId.equals(s.getSchoolId()) && "ACTIVE".equals(s.getStatus()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
@@ -33,6 +34,16 @@ public class StudentGuardianService {
         }
         StudentGuardian guardian = new StudentGuardian(schoolId, studentId, request.fullName().trim(), relationship,
                 trim(request.email()), trim(request.phone()), request.primaryContact());
+        return view(repository.save(guardian));
+    }
+
+    @Transactional
+    public GuardianView changeStatus(UUID schoolId, UUID studentId, UUID guardianId, boolean active) {
+        requireStudent(schoolId, studentId);
+        StudentGuardian guardian = repository.findById(guardianId)
+                .filter(g -> schoolId.equals(g.getSchoolId()) && studentId.equals(g.getStudentId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Guardian not found"));
+        if (active) guardian.activate(); else guardian.deactivate();
         return view(repository.save(guardian));
     }
 
