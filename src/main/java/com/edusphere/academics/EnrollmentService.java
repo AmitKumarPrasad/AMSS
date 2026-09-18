@@ -40,6 +40,8 @@ public class EnrollmentService {
                 .filter(y -> schoolId.equals(y.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found"));
         if (!"ACTIVE".equals(academicYear.getStatus())) bad("Enrollment can only be created for an active academic year");
+        if (!"ACTIVE".equals(schoolClass.getStatus())) bad("Enrollment can only be created for an active class");
+        if (!"ACTIVE".equals(section.getStatus())) bad("Enrollment can only be created for an active section");
         Student student = requireStudent(schoolId, request.studentId());
         if (!"ACTIVE".equals(student.getStatus())) bad("Enrollment can only be created for an active student");
         if (request.enrolledOn().isAfter(LocalDate.now())) bad("enrolledOn cannot be in the future");
