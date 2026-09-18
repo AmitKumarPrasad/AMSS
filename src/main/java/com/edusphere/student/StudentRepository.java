@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface StudentRepository extends JpaRepository<Student, UUID> {
     List<Student> findBySchoolIdAndStatusOrderByFirstNameAsc(UUID schoolId, String status);
+    boolean existsBySchoolIdAndAdmissionNumber(UUID schoolId, String admissionNumber);
 }
