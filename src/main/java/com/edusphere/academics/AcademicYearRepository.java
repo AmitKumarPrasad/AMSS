@@ -6,6 +6,8 @@ import java.util.UUID;
 
 public interface AcademicYearRepository extends JpaRepository<AcademicYear, UUID> {
     List<AcademicYear> findBySchoolIdOrderByStartsOnDesc(UUID schoolId);
+    boolean existsBySchoolIdAndStatus(UUID schoolId, String status);
+
     boolean existsBySchoolIdAndCode(UUID schoolId, String code);
     boolean existsBySchoolIdAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(
             UUID schoolId, java.time.LocalDate endsOn, java.time.LocalDate startsOn);
