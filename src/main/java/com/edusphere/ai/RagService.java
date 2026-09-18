@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -92,13 +93,27 @@ public class RagService {
                 .reduce((left, right) -> left + "," + right)
                 .orElse("'PUBLIC'");
         String filter = "school_id == '" + escape(schoolId.toString()) + "' && audience_role in [" + audienceFilter + "]";
-        return vectorStore.similaritySearch(SearchRequest.builder()
+        List<org.springframework.ai.document.Document> matches = vectorStore.similaritySearch(SearchRequest.builder()
                         .query(question.trim())
                         .topK(Math.max(1, Math.min(topK, 20)))
                         .similarityThresholdAll()
                         .filterExpression(filter)
-                        .build())
-                .stream()
+                        .build());
+
+        List<UUID> documentIds = matches.stream()
+                .map(document -> String.valueOf(document.getMetadata().getOrDefault("document_id", "")))
+                .map(this::parseUuid)
+                .flatMap(java.util.Optional::stream)
+                .distinct()
+                .toList();
+        Map<UUID, Document> publishedDocuments = documentRepository.findAllById(documentIds).stream()
+                .filter(document -> schoolId.equals(document.getSchoolId()))
+                .filter(document -> "PUBLISHED".equals(document.getStatus()))
+                .collect(java.util.stream.Collectors.toMap(Document::getId, document -> document));
+
+        return matches.stream()
+                .filter(document -> parseUuid(String.valueOf(document.getMetadata().getOrDefault("document_id", "")))
+                        .map(publishedDocuments::containsKey).orElse(false))
                 .map(document -> new RagResult(
                         document.getText(),
                         String.valueOf(document.getMetadata().getOrDefault("title", "Untitled")),
@@ -122,6 +137,11 @@ public class RagService {
             start = Math.max(start + 1, end - CHUNK_OVERLAP);
         }
         return chunks;
+    }
+
+    private Optional<UUID> parseUuid(String value) {
+        try { return Optional.of(UUID.fromString(value)); }
+        catch (IllegalArgumentException | NullPointerException e) { return Optional.empty(); }
     }
 
     private String escape(String value) { return value.replace("'", "''"); }
