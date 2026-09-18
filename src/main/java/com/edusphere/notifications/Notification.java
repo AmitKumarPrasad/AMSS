@@ -29,6 +29,8 @@ public class Notification {
     public void markRead(){readAt=Instant.now();}
     public boolean isClaimedBy(String workerId){return workerId != null && workerId.equals(claimedBy);}
     public boolean isClaimed(){return claimedBy != null;}
+    public boolean claimExpired(Instant now, long leaseSeconds){return claimedAt != null && claimedAt.plusSeconds(leaseSeconds).isBefore(now);}
     public void claim(String workerId){this.claimedBy=workerId; this.claimedAt=Instant.now();}
+    public void releaseClaim(){this.claimedBy=null; this.claimedAt=null;}
     public UUID getId(){return id;} public UUID getSchoolId(){return schoolId;} public UUID getRecipientUserId(){return recipientUserId;} public String getChannel(){return channel;} public String getSubject(){return subject;} public String getBody(){return body;} public String getStatus(){return status;} public int getAttempts(){return attempts;} public Instant getAvailableAt(){return availableAt;} public String getLastError(){return lastError;} public Instant getSentAt(){return sentAt;} public Instant getReadAt(){return readAt;} public Instant getCreatedAt(){return createdAt;}
 }
