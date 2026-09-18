@@ -27,7 +27,7 @@ public class NotificationWorkerService {
                 repository.findTop100ByStatusAndAvailableAtLessThanEqualAndClaimedByIsNullOrderByAvailableAtAsc("PENDING", now);
         return candidates.stream()
                 .filter(n -> repository.claim(n.getId(), workerId, now, now, "PENDING") == 1)
-                .map(id -> repository.findById(id.getId()).orElse(null))
+                .map(n -> repository.findById(n.getId()).orElse(null))
                 .filter(java.util.Objects::nonNull)
                 .toList();
     }
