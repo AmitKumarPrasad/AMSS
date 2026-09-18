@@ -24,6 +24,8 @@ public class StudentGuardian {
         this.email=email; this.phone=phone; this.primaryContact=primaryContact;
     }
     public UUID getId(){return id;} public UUID getSchoolId(){return schoolId;} public UUID getStudentId(){return studentId;}
+    public void deactivate(){this.status="INACTIVE"; this.primaryContact=false;}
+    public void activate(){this.status="ACTIVE";}
     public String getFullName(){return fullName;} public String getRelationship(){return relationship;} public String getEmail(){return email;}
     public String getPhone(){return phone;} public boolean isPrimaryContact(){return primaryContact;} public String getStatus(){return status;} public Instant getCreatedAt(){return createdAt;}
     void setPrimaryContact(boolean value){this.primaryContact=value;}
