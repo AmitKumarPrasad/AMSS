@@ -1,6 +1,7 @@
 package com.edusphere.notifications;
 
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -31,6 +32,14 @@ public class NotificationWorkerService {
                 .map(n -> repository.findById(n.getId()).orElse(null))
                 .filter(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    @Scheduled(fixedDelayString = "${notifications.worker.interval-ms:10000}")
+    @Transactional
+    public void runWorker() {
+        releaseExpiredClaims();
+        String workerId = "amss-worker-" + java.util.UUID.randomUUID();
+        claimBatch(workerId).forEach(n -> process(workerId, n.getId()));
     }
 
     @Transactional
