@@ -21,6 +21,12 @@ public class NotificationWorkerController {
         return worker.claimBatch(workerId);
     }
 
+    @PostMapping("/release-expired")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public int releaseExpired() {
+        return worker.releaseExpiredClaims();
+    }
+
     @PostMapping("/{notificationId}/process")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
     public boolean process(@RequestParam String workerId, @PathVariable UUID notificationId) {
