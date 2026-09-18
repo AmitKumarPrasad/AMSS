@@ -41,6 +41,16 @@ public class StudentController {
                 request.admissionNumber(), request.firstName(), request.lastName(), request.dateOfBirth()));
     }
 
+    @PatchMapping("/{studentId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public StudentService.StudentView changeStatus(@PathVariable UUID schoolId,
+                                                    @PathVariable UUID studentId,
+                                                    @RequestParam boolean active,
+                                                    Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return service.changeStatus(schoolId, studentId, active);
+    }
+
     public record CreateStudentRequest(
             @NotBlank String admissionNumber,
             @NotBlank String firstName,
