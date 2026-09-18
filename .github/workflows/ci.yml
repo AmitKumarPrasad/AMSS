@@ -62,6 +62,7 @@ jobs:
           JWT_ISSUER: http://localhost:8080
           SPRING_PROFILES_ACTIVE: prod
           SPRING_AI_MCP_SERVER_ENABLED: "false"
+          NOTIFICATIONS_EMAIL_ENABLED: "false"
 
   python:
     runs-on: ubuntu-latest
