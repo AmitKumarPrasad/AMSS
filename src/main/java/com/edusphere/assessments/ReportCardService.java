@@ -36,6 +36,7 @@ public class ReportCardService {
 
     @Transactional(readOnly = true)
     public ReportCardView get(UUID schoolId, UUID academicYearId, UUID studentId) {
+        if (academicYearId == null || studentId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "academicYearId and studentId are required");
         academicYearRepository.findById(academicYearId).filter(y -> schoolId.equals(y.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found"));
         Student student = studentRepository.findById(studentId).filter(s -> schoolId.equals(s.getSchoolId()))
