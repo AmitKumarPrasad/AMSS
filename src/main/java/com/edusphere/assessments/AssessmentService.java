@@ -122,9 +122,12 @@ public class AssessmentService {
     }
 
     private void requireEnrolledInClass(UUID schoolId, UUID classId, UUID studentId) {
-        studentRepository.findById(studentId)
+        var student = studentRepository.findById(studentId)
                 .filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+        if (!"ACTIVE".equals(student.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assessment results can only be recorded for an active student");
+        }
         boolean enrolled = enrollmentRepository.findByStudentIdAndStatusOrderByEnrolledOnDesc(studentId, "ACTIVE")
                 .stream()
                 .map(Enrollment::getSectionId)
