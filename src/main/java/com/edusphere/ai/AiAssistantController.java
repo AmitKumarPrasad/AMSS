@@ -38,9 +38,14 @@ public class AiAssistantController {
                                  @Valid @RequestBody AskRequest request,
                                  Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
+        String question = request.question().trim();
+        if (question.length() > 2000) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "question must not exceed 2000 characters");
+        }
         List<String> roles = authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList();
-        List<RagService.RagResult> evidence = ragService.search(schoolId, roles, request.question(), 8);
-        return new AssistantResponse(assistant.answer(request.question(), evidence), evidence);
+        List<RagService.RagResult> evidence = ragService.search(schoolId, roles, question, 8);
+        return new AssistantResponse(assistant.answer(question, evidence), evidence);
     }
 
     public record IndexDocumentRequest(@NotBlank String content) {}
