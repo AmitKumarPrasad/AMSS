@@ -48,10 +48,16 @@ public class AssessmentService {
     public AssessmentView create(UUID schoolId, CreateAssessmentRequest request) {
         if (request == null || request.academicYearId() == null || request.classId() == null || request.assessmentDate() == null || request.maxMarks() == null) bad("academicYearId, classId, assessmentDate and maxMarks are required");
         if (request.name() == null || request.name().isBlank()) bad("name is required");
-        requireAcademicYear(schoolId, request.academicYearId());
-        requireClass(schoolId, request.classId());
-        if (!request.academicYearId().equals(requireClass(schoolId, request.classId()).getAcademicYearId())) {
+        requireActiveAcademicYear(schoolId, request.academicYearId());
+        SchoolClass schoolClass = requireClass(schoolId, request.classId());
+        if (!"ACTIVE".equals(schoolClass.getStatus())) {
+            bad("Assessment can only be created for an active class");
+        }
+        if (!request.academicYearId().equals(schoolClass.getAcademicYearId())) {
             bad("class does not belong to the academic year");
+        }
+        if (request.assessmentDate().isAfter(LocalDate.now())) {
+            bad("assessmentDate cannot be in the future");
         }
         if (request.maxMarks().signum() <= 0) bad("maxMarks must be greater than zero");
         String name = request.name().trim();
@@ -91,6 +97,15 @@ public class AssessmentService {
         assessmentRepository.findByIdAndSchoolId(assessmentId, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assessment not found"));
         return resultRepository.findByAssessmentIdOrderByStudentIdAsc(assessmentId).stream().map(this::toView).toList();
+    }
+
+    private void requireActiveAcademicYear(UUID schoolId, UUID academicYearId) {
+        var year = academicYearRepository.findById(academicYearId)
+                .filter(y -> schoolId.equals(y.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academic year not found"));
+        if (!"ACTIVE".equals(year.getStatus())) {
+            bad("Assessment can only be created for an active academic year");
+        }
     }
 
     private AcademicYearMarker requireAcademicYear(UUID schoolId, UUID academicYearId) {
