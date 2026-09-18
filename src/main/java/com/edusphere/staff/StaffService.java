@@ -56,6 +56,8 @@ public class StaffService {
         if(!LEAVE_TYPES.contains(type)) bad("Invalid leaveType");
         if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"APPROVED",r.endsOn(),r.startsOn()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
+        if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"PENDING",r.endsOn(),r.startsOn()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps pending leave");
         return leave(leaveRepository.save(new LeaveRequest(schoolId,staffId,type,r.startsOn(),r.endsOn(),trim(r.reason()))));
     }
     @Transactional(readOnly=true) public List<LeaveView> leaves(UUID schoolId){
