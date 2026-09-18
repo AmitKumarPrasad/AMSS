@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface SchoolClassRepository extends JpaRepository<SchoolClass,UUID>{
     List<SchoolClass> findBySchoolIdAndAcademicYearIdOrderByGradeLevelAscNameAsc(UUID schoolId,UUID academicYearId);
+    boolean existsBySchoolIdAndAcademicYearIdAndNameIgnoreCase(UUID schoolId, UUID academicYearId, String name);
 }
