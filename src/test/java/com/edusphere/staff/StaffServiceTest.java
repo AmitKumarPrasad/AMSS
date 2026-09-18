@@ -37,7 +37,7 @@ class StaffServiceTest {
 
     @Test void rejectsLeaveForInactiveStaff() {
         UUID school = UUID.randomUUID(), staffId = UUID.randomUUID();
-        StaffMember staff = new StaffMember(school, "E1", "Alice", null, null, "Teacher", "FULL_TIME", null);
+        StaffMember staff = new StaffMember(school, "E1", "Alice", null, null, "Teacher", "FULL_TIME", null);\n        staff.deactivate();
         StaffService service = new StaffService(staffRepository, leaveRepository);
         when(staffRepository.findById(staffId)).thenReturn(Optional.of(staff));
         assertThrows(ResponseStatusException.class, () -> service.requestLeave(school, staffId,
