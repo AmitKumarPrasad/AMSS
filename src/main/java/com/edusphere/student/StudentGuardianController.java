@@ -38,6 +38,15 @@ public class StudentGuardianController {
                 request.fullName(), request.relationship(), request.email(), request.phone(), request.primaryContact()));
     }
 
+    @PatchMapping("/{guardianId}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
+    public StudentGuardianService.GuardianView changeStatus(@PathVariable UUID schoolId, @PathVariable UUID studentId,
+                                                             @PathVariable UUID guardianId, @RequestParam boolean active,
+                                                             Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return service.changeStatus(schoolId, studentId, guardianId, active);
+    }
+
     public record CreateGuardian(@NotBlank String fullName, @NotBlank String relationship, @Email String email,
                                  String phone, boolean primaryContact) {}
 }
