@@ -11,6 +11,7 @@ import java.util.UUID;
 public class NotificationWorkerService {
     private final NotificationRepository repository;
     private final NotificationService notificationService;
+    private static final long CLAIM_LEASE_SECONDS = 300;
 
     public NotificationWorkerService(NotificationRepository repository, NotificationService notificationService) {
         this.repository = repository;
@@ -30,6 +31,20 @@ public class NotificationWorkerService {
                 .map(n -> repository.findById(n.getId()).orElse(null))
                 .filter(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    @Transactional
+    public int releaseExpiredClaims() {
+        Instant now = Instant.now();
+        int released = 0;
+        for (Notification n : repository.findAll()) {
+            if ("PENDING".equals(n.getStatus()) && n.claimExpired(now, CLAIM_LEASE_SECONDS)) {
+                n.releaseClaim();
+                repository.save(n);
+                released++;
+            }
+        }
+        return released;
     }
 
     @Transactional
