@@ -24,6 +24,6 @@ public class StaffMember {
         this.designation=designation; this.employmentType=employmentType; this.joinedOn=joinedOn;
     }
     public UUID getId(){return id;} public UUID getSchoolId(){return schoolId;} public String getEmployeeCode(){return employeeCode;}
-    public String getFullName(){return fullName;} public String getEmail(){return email;} public String getPhone(){return phone;}
+    public void deactivate(){this.status="INACTIVE";} public void activate(){this.status="ACTIVE";}\n    public String getFullName(){return fullName;} public String getEmail(){return email;} public String getPhone(){return phone;}
     public String getDesignation(){return designation;} public String getEmploymentType(){return employmentType;} public LocalDate getJoinedOn(){return joinedOn;} public String getStatus(){return status;}
 }
