@@ -1,5 +1,6 @@
 package com.edusphere.notifications;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,11 +13,17 @@ import java.util.UUID;
 public class NotificationWorkerService {
     private final NotificationRepository repository;
     private final NotificationService notificationService;
-    private static final long CLAIM_LEASE_SECONDS = 300;
+    private final long claimLeaseSeconds;
 
-    public NotificationWorkerService(NotificationRepository repository, NotificationService notificationService) {
+    public NotificationWorkerService(NotificationRepository repository,
+                                     NotificationService notificationService,
+                                     @Value("${notifications.worker.claim-lease-seconds:300}") long claimLeaseSeconds) {
+        if (claimLeaseSeconds <= 0) {
+            throw new IllegalArgumentException("Notification claim lease must be greater than zero");
+        }
         this.repository = repository;
         this.notificationService = notificationService;
+        this.claimLeaseSeconds = claimLeaseSeconds;
     }
 
     @Transactional
@@ -41,7 +48,7 @@ public class NotificationWorkerService {
 
     @Transactional
     public int releaseExpiredClaims() {
-        Instant cutoff = Instant.now().minusSeconds(CLAIM_LEASE_SECONDS);
+        Instant cutoff = Instant.now().minusSeconds(claimLeaseSeconds);
         return repository.releaseExpiredClaims(cutoff);
     }
 
