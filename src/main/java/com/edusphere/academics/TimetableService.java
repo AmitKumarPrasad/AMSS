@@ -32,6 +32,9 @@ public class TimetableService {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
         SchoolClass schoolClass = requireClass(schoolId, section.getClassId());
+        if (!"ACTIVE".equals(schoolClass.getStatus()) || !"ACTIVE".equals(section.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Timetable can only be created for an active class and section");
+        }
         Subject subject = subjectRepository.findById(request.subjectId())
                 .filter(s -> schoolId.equals(s.getSchoolId()) && "ACTIVE".equals(s.getStatus()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subject not found"));
