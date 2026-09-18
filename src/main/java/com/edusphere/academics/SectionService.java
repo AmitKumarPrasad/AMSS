@@ -19,8 +19,12 @@ public class SectionService {
 
     public SectionView create(UUID schoolId, UUID classId, CreateSectionRequest request) {
         requireClass(schoolId, classId);
+        if (request == null || request.name() == null || request.name().isBlank()) bad("name is required");
         String name = request.name().trim();
-        String room = request.room() == null ? null : request.room().trim();
+        String room = request.room() == null || request.room().isBlank() ? null : request.room().trim();
+        if (sectionRepository.existsByClassIdAndNameIgnoreCase(classId, name)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Section name already exists for class");
+        }
         return toView(sectionRepository.save(new Section(classId, name, room)));
     }
 
@@ -30,6 +34,7 @@ public class SectionService {
     }
 
     private SchoolClass requireClass(UUID schoolId, UUID classId) {
+        if (schoolId == null || classId == null) bad("schoolId and classId are required");
         SchoolClass schoolClass = classRepository.findById(classId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Class not found"));
         if (!schoolId.equals(schoolClass.getSchoolId())) {
@@ -37,6 +42,8 @@ public class SectionService {
         }
         return schoolClass;
     }
+
+    private void bad(String message) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
 
     private SectionView toView(Section section) {
         return new SectionView(section.getId(), section.getClassId(), section.getName(), section.getRoom());
