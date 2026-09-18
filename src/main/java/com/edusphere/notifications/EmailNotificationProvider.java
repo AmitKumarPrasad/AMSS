@@ -3,6 +3,7 @@ package com.edusphere.notifications;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,7 +12,7 @@ public class EmailNotificationProvider {
     private final String from;
     private final boolean enabled;
 
-    public EmailNotificationProvider(JavaMailSender mailSender,
+    public EmailNotificationProvider(@Nullable JavaMailSender mailSender,
                                      @Value("${notifications.email.from:no-reply@amss.local}") String from,
                                      @Value("${notifications.email.enabled:false}") boolean enabled) {
         this.mailSender = mailSender;
@@ -23,6 +24,7 @@ public class EmailNotificationProvider {
 
     public void send(String recipient, String subject, String body) {
         if (!enabled) throw new IllegalStateException("Email notification provider is disabled");
+        if (mailSender == null) throw new IllegalStateException("JavaMailSender is not configured");
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(recipient);
