@@ -33,6 +33,8 @@ public class TimetableEntry {
     public LocalTime getStartsAt() { return startsAt; }
     public LocalTime getEndsAt() { return endsAt; }
     public String getRoom() { return room; }
+    public void deactivate() { this.status = "INACTIVE"; }
+    public void activate() { this.status = "ACTIVE"; }
     public String getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
 }
