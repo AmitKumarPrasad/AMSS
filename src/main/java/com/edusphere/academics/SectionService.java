@@ -19,7 +19,7 @@ public class SectionService {
         if(sectionRepository.existsByClassIdAndNameIgnoreCase(classId,name)) throw new ResponseStatusException(HttpStatus.CONFLICT,"Section name already exists for class");
         return toView(sectionRepository.save(new Section(classId,name,room)));
     }
-    public List<SectionView> list(UUID schoolId,UUID classId){requireClass(schoolId,classId);return sectionRepository.findByClassIdOrderByNameAsc(classId).stream().map(this::toView).toList();}
+    @Transactional(readOnly = true) public List<SectionView> list(UUID schoolId,UUID classId){requireClass(schoolId,classId);return sectionRepository.findByClassIdOrderByNameAsc(classId).stream().map(this::toView).toList();}
     @Transactional public SectionView changeStatus(UUID schoolId,UUID sectionId,boolean active){
         Section section=sectionRepository.findById(sectionId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Section not found"));
         SchoolClass schoolClass=requireClass(schoolId,section.getClassId());
