@@ -29,6 +29,14 @@ public class StaffService {
         StaffMember s=new StaffMember(schoolId,code,name,trim(r.email()),trim(r.phone()),designation,type,r.joinedOn());
         return view(staffRepository.save(s));
     }
+    @Transactional public StaffView changeStatus(UUID schoolId, UUID staffId, boolean active){
+        StaffMember staff=staffRepository.findById(staffId)
+                .filter(s -> schoolId.equals(s.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff member not found"));
+        if(active) staff.activate(); else staff.deactivate();
+        return view(staffRepository.save(staff));
+    }
+
     @Transactional(readOnly=true) public List<StaffView> list(UUID schoolId){
         return staffRepository.findBySchoolIdAndStatusOrderByFullNameAsc(schoolId,"ACTIVE").stream().map(this::view).toList();
     }
