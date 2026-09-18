@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface SectionRepository extends JpaRepository<Section, UUID> {
     List<Section> findByClassIdOrderByNameAsc(UUID classId);
+    boolean existsByClassIdAndNameIgnoreCase(UUID classId, String name);
 }
