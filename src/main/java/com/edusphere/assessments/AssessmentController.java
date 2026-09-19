@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PostMapping;\nimport org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,7 +53,7 @@ public class AssessmentController {
         return assessmentService.list(schoolId, academicYearId);
     }
 
-    @PostMapping("/{assessmentId}/results/{studentId}")
+    @PatchMapping("/{assessmentId}/status")\n    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")\n    public AssessmentService.AssessmentView changeStatus(@PathVariable UUID schoolId,\n                                                           @PathVariable UUID assessmentId,\n                                                           @Valid @RequestBody ChangeStatusRequest request,\n                                                           Authentication authentication) {\n        tenantAccess.requireSchool(authentication, schoolId);\n        return assessmentService.changeStatus(schoolId, assessmentId, request.status());\n    }\n\n    @PostMapping("/{assessmentId}/results/{studentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public AssessmentService.ResultView recordResult(@PathVariable UUID schoolId,
                                                       @PathVariable UUID assessmentId,
@@ -78,5 +78,5 @@ public class AssessmentController {
                                           @NotBlank String name, @NotNull LocalDate assessmentDate,
                                           @NotNull @DecimalMin("0.01") BigDecimal maxMarks) {}
 
-    public record RecordResultRequest(@NotNull @DecimalMin("0.00") BigDecimal marks, String grade) {}
+    public record RecordResultRequest(@NotNull @DecimalMin("0.00") BigDecimal marks, String grade) {}\n\n    public record ChangeStatusRequest(@NotBlank String status) {}
 }
