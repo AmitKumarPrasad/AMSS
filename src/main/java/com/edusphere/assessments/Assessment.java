@@ -58,5 +58,5 @@ public class Assessment {
     public String getName() { return name; }
     public LocalDate getAssessmentDate() { return assessmentDate; }
     public BigDecimal getMaxMarks() { return maxMarks; }
-    public String getStatus() { return status; }
+    public String getStatus() { return status; }\n\n    public void changeStatus(String status) { this.status = status; }
 }
