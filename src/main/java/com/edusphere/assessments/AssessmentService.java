@@ -81,7 +81,7 @@ public class AssessmentService {
         if (assessmentId == null || studentId == null || marks == null) bad("assessmentId, studentId and marks are required");
         Assessment assessment = assessmentRepository.findByIdAndSchoolId(assessmentId, schoolId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assessment not found"));
-        if (marks.signum() < 0 || marks.compareTo(assessment.getMaxMarks()) > 0) {
+        if (!"DRAFT".equals(assessment.getStatus())) {\n            bad("Assessment results can only be recorded while the assessment is in DRAFT status");\n        }\n        if (marks.signum() < 0 || marks.compareTo(assessment.getMaxMarks()) > 0) {
             bad("marks must be between zero and maxMarks");
         }
         requireEnrolledInClass(schoolId, assessment.getClassId(), studentId);
