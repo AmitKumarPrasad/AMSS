@@ -18,11 +18,10 @@ public class AiRequestIdempotencyService {
     private static final int STALE_MINUTES = 10;
 
     private final JdbcTemplate jdbc;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public AiRequestIdempotencyService(JdbcTemplate jdbc, ObjectMapper objectMapper) {
+    public AiRequestIdempotencyService(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.objectMapper = objectMapper;
     }
 
     @Transactional
