@@ -56,6 +56,22 @@ Postgres Redis   MCP Server
 - Observability with Actuator/Micrometer.
 - Document content is stored behind a storage abstraction; local filesystem is the default provider and S3-compatible object storage is supported without changing the document API contract.
 
+## Production deployment
+
+Use `docker-compose.production.yml` as the deployment baseline for a single application stack. It intentionally does not publish PostgreSQL or Redis ports to the host.
+
+1. Copy `.env.production.example` into your secret-management workflow; do not commit populated secrets.
+2. Generate a strong database password and a random JWT secret of at least 32 characters.
+3. Set `JWT_ISSUER` to the public HTTPS issuer used by the API.
+4. Set `LANGGRAPH_BASE_URL` to the private AI-orchestrator endpoint.
+5. Build/tag the application image as `amss:production`.
+6. Start with:
+   `docker compose --env-file .env.production -f docker-compose.production.yml up -d`
+7. Verify liveness and readiness before routing external traffic.
+8. Keep database backups and document storage backups outside the application container.
+
+The production compose file is a baseline, not a substitute for a managed database, secret manager, TLS reverse proxy/load balancer, centralized logging, monitoring or disaster-recovery process.
+
 ## Document storage
 
 Local filesystem remains the default for development:
@@ -81,7 +97,7 @@ The AWS SDK default credential provider chain is used, so credentials should be 
 
 ## Current status
 
-Core school-management bounded contexts, AI foundation, authenticated admin UI, local document storage, S3-compatible object storage, email notifications and atomic notification claiming are implemented and CI-verified. Remaining work is primarily production hardening: SMS provider integration, richer analytics, end-to-end integration coverage, deployment configuration, security review and operational runbooks.
+Core school-management bounded contexts, AI foundation, authenticated admin UI, local document storage, S3-compatible object storage, email notifications and atomic notification claiming are implemented and CI-verified. Remaining work is primarily production hardening: SMS provider integration, richer analytics, end-to-end integration coverage, operational runbooks and deployment infrastructure beyond the provided Compose baseline.
 
 ## Configuration
 
