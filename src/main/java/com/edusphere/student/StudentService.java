@@ -22,6 +22,10 @@ public class StudentService {
         this.repository = repository;
     }
 
+    public java.util.List<StudentView> activeStudents(UUID schoolId) {
+        return list(schoolId, "ACTIVE", null, 0, MAX_PAGE_SIZE).getContent();
+    }
+
     public Page<StudentView> list(UUID schoolId, String status, String query, int page, int size) {
         validatePage(page, size);
         String normalizedStatus = normalizeStatus(status);
