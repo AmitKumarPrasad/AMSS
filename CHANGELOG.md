@@ -15,6 +15,10 @@
 - Project memory.
 - Service-layer state-transition tests for assessment, academic year, staff and notifications.
 
+### Database hardening
+- Strengthened Flyway integration coverage from a minimum migration count to all 16 versioned migrations.
+- Added schema assertions for all current application tables, vector store objects and critical evolved columns.
+
 ### API hardening
 - Added centralized REST exception handling with a stable `ApiError` response contract.
 - Added validation, access-denied, not-found, conflict and generic-error mappings.

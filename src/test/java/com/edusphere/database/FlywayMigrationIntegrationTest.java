@@ -8,6 +8,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.DriverManager;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,22 +34,34 @@ class FlywayMigrationIntegrationTest {
 
         var result = flyway.migrate();
         assertTrue(result.success);
-        assertTrue(result.migrationsExecuted >= 15);
+        assertEquals(16, result.migrationsExecuted);
 
         try (var connection = DriverManager.getConnection(
                 POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
-            assertTrue(countRows(connection, "select count(*) from flyway_schema_history where success = true") >= 15);
-            assertTrue(tableExists(connection, "schools"));
-            assertTrue(tableExists(connection, "app_users"));
-            assertTrue(tableExists(connection, "students"));
-            assertTrue(tableExists(connection, "documents"));
-            assertTrue(tableExists(connection, "notifications"));
+            assertEquals(16, countRows(connection,
+                    "select count(*) from flyway_schema_history where success = true"));
+
+            List<String> expectedTables = List.of(
+                    "schools", "app_users", "roles", "user_roles", "students", "audit_events",
+                    "academic_years", "classes", "sections", "enrollments", "attendance_records",
+                    "fee_invoices", "fee_payments", "assessments", "assessment_results",
+                    "announcements", "announcement_reads", "subjects", "class_subjects",
+                    "timetable_entries", "documents", "staff_members", "leave_requests",
+                    "staff_attendance_records", "student_guardians", "notifications", "vector_store"
+            );
+            for (String table : expectedTables) {
+                assertTrue(tableExists(connection, table), "Missing migration table: " + table);
+            }
+
+            assertTrue(columnExists(connection, "notifications", "read_at"));
             assertTrue(columnExists(connection, "notifications", "claimed_at"));
             assertTrue(columnExists(connection, "notifications", "claimed_by"));
             assertTrue(columnExists(connection, "documents", "storage_key"));
             assertTrue(columnExists(connection, "classes", "status"));
             assertTrue(columnExists(connection, "sections", "status"));
             assertTrue(extensionExists(connection, "vector"));
+            assertTrue(extensionExists(connection, "hstore"));
+            assertTrue(extensionExists(connection, "uuid-ossp"));
         }
     }
 
@@ -70,7 +83,8 @@ class FlywayMigrationIntegrationTest {
     }
 
     private static boolean columnExists(java.sql.Connection connection, String table, String column) throws Exception {
-        try (var statement = connection.prepareStatement("select exists (select 1 from information_schema.columns where table_schema='public' and table_name=? and column_name=?)")) {
+        try (var statement = connection.prepareStatement(
+                "select exists (select 1 from information_schema.columns where table_schema='public' and table_name=? and column_name=?)")) {
             statement.setString(1, table);
             statement.setString(2, column);
             try (var result = statement.executeQuery()) {
@@ -81,7 +95,8 @@ class FlywayMigrationIntegrationTest {
     }
 
     private static boolean extensionExists(java.sql.Connection connection, String extension) throws Exception {
-        try (var statement = connection.prepareStatement("select exists (select 1 from pg_extension where extname=?)")) {
+        try (var statement = connection.prepareStatement(
+                "select exists (select 1 from pg_extension where extname=?)")) {
             statement.setString(1, extension);
             try (var result = statement.executeQuery()) {
                 result.next();
