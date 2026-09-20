@@ -15,7 +15,7 @@ public interface FeeInvoiceRepository extends JpaRepository<FeeInvoice, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     java.util.Optional<FeeInvoice> findById(UUID id);
 
-    List<FeeInvoice> findBySchoolIdAndStudentIdOrderByDueDateDesc(UUID schoolId, UUID studentId);
+    Page<FeeInvoice> findBySchoolIdAndStudentIdOrderByDueDateDesc(UUID schoolId, UUID studentId, Pageable pageable);
 
     Page<FeeInvoice> findBySchoolIdOrderByDueDateDesc(UUID schoolId, Pageable pageable);
 

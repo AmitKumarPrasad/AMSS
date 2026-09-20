@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -52,10 +54,12 @@ public class FeeController {
 
     @GetMapping("/students/{studentId}/invoices")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','ACCOUNTANT','TEACHER')")
-    public List<FeeService.InvoiceView> listInvoices(@PathVariable UUID schoolId, @PathVariable UUID studentId,
+    public Page<FeeService.InvoiceView> listInvoices(@PathVariable UUID schoolId, @PathVariable UUID studentId,
+                                                      @RequestParam(defaultValue = "0") @Min(0) int page,
+                                                      @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size,
                                                       Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return feeService.listInvoices(schoolId, studentId);
+        return feeService.listInvoices(schoolId, studentId, page, size);
     }
 
     @PostMapping("/invoices/{invoiceId}/payments")
