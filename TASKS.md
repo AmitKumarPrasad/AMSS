@@ -63,7 +63,10 @@ This file is the implementation source of truth for the next development batches
   - Added bulk result recording with duplicate-student protection.
   - Added strict marks/grade validation and assessment-state enforcement.
   - Added tenant-scoped academic-year report-card aggregation.
-- [ ] Complete notifications backend workflows and provider controls.
+- [x] Complete notifications backend workflows and provider controls.
+  - Added bounded notification listing and strict request field limits.
+  - Preserved tenant-scoped recipient authorization and recipient-only read mutation.
+  - Preserved retry/backoff limits and email/SMS fail-closed provider controls.
 - [ ] Complete documents and communication backend APIs.
 - [ ] Complete AI assistant production APIs and conversation state.
 - [ ] Backend-wide pagination, filtering and API contract review.

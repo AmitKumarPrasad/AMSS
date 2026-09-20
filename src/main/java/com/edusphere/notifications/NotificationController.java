@@ -4,6 +4,7 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -35,9 +36,11 @@ public class NotificationController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public List<NotificationService.NotificationView> list(@PathVariable UUID schoolId, Authentication authentication) {
+    public List<NotificationService.NotificationView> list(@PathVariable UUID schoolId,
+                                                            @RequestParam(defaultValue = "50") int limit,
+                                                            Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return service.list(schoolId, tenantAccess.currentUserId(authentication));
+        return service.list(schoolId, tenantAccess.currentUserId(authentication), limit);
     }
 
     @GetMapping("/unread-count")
@@ -56,5 +59,9 @@ public class NotificationController {
         return service.markRead(schoolId, notificationId, tenantAccess.currentUserId(authentication));
     }
 
-    public record CreateNotification(@NotNull UUID recipientUserId, String channel, String subject, @NotBlank String body) {}
+    public record CreateNotification(
+            @NotNull UUID recipientUserId,
+            @Size(max = 16) String channel,
+            @Size(max = 200) String subject,
+            @NotBlank @Size(max = 10000) String body) {}
 }

@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+### Backend notifications completion
+- Added bounded notification listing and strict notification request field limits.
+- Preserved tenant-scoped recipient authorization and recipient-only read mutation.
+- Preserved retry/backoff limits and fail-closed email/SMS provider controls.
+
 ### Backend assessments and report cards
 - Added bulk assessment-result recording with duplicate-student protection.
 - Added marks and grade validation with assessment-state enforcement.
