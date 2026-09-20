@@ -1,6 +1,5 @@
 package com.edusphere.fees;
 
-import com.edusphere.student.Student;
 import com.edusphere.student.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,10 +47,20 @@ class FeeServiceTest {
         FeeService service = new FeeService(invoices, payments, students);
         when(invoices.findById(invoiceId)).thenReturn(Optional.of(invoice));
 
-        assertThrows(ResponseStatusException.class, () -> service.listPayments(requestedSchool, invoiceId));
+        assertThrows(ResponseStatusException.class, () -> service.listPayments(requestedSchool, invoiceId, 0, 50));
         assertThrows(ResponseStatusException.class, () -> service.recordPayment(requestedSchool, invoiceId,
                 new FeeService.RecordPaymentRequest("PAY-1", BigDecimal.TEN)));
         verifyNoInteractions(payments);
+    }
+
+    @Test void rejectsInvalidPaymentPagination() {
+        UUID school = UUID.randomUUID();
+        UUID invoiceId = UUID.randomUUID();
+        FeeService service = new FeeService(invoices, payments, students);
+
+        assertThrows(ResponseStatusException.class, () -> service.listPayments(school, invoiceId, -1, 50));
+        assertThrows(ResponseStatusException.class, () -> service.listPayments(school, invoiceId, 0, 101));
+        verifyNoInteractions(invoices, payments);
     }
 
     @Test void rejectsDuplicatePaymentReference() {
