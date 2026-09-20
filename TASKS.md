@@ -29,6 +29,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Review AI orchestrator configuration and secret handling.
 - [x] Add health/readiness checks where missing.
 - [x] Review Docker configuration for production safety.
+- [x] Complete JWT security review: validate issuer configuration and enforce the configured issuer claim during token verification.
 
 ### Tenant audit result
 - School-owned list queries use schoolId predicates.
@@ -90,9 +91,7 @@ This file is the implementation source of truth for the next development batches
 - The service credential is never copied into tenant/user request bodies or logged.
 - [x] Add retrieval/RAG boundary.
 - [x] Add AI audit/observability.
-
 - [x] Add domain-safe school context filtering.
-
 
 ### AI audit/observability
 - AI ask and RAG indexing operations emit tenant/user-scoped audit events using the existing audit_events table.
@@ -125,6 +124,14 @@ This file is the implementation source of truth for the next development batches
 ### Production security configuration
 - JWT startup validation rejects missing, weak or known insecure default secrets.
 - HS256 signing/verification is only initialized after the configured secret passes the minimum 32-character strength check.
+
+## Production Hardening Roadmap
+- [x] Security review: fail closed on weak JWT secrets and enforce configured JWT issuer validation.
+- [ ] Deployment configuration for production environments.
+- [ ] Operational runbooks for deployment, rollback, backup/restore and incident response.
+- [ ] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
+- [ ] SMS provider integration.
+- [ ] Richer analytics.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.

@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -33,6 +34,9 @@ public class SecurityConfig {
     @Value("${app.security.jwt-secret}")
     private String jwtSecret;
 
+    @Value("${app.security.issuer}")
+    private String issuer;
+
     @PostConstruct
     void validateJwtSecret() {
         if (jwtSecret == null || jwtSecret.isBlank()
@@ -40,6 +44,12 @@ public class SecurityConfig {
                 || INSECURE_DEFAULT.equals(jwtSecret)) {
             throw new IllegalStateException(
                     "JWT_SECRET must be configured with a random secret of at least 32 characters");
+        }
+        if (issuer == null || issuer.isBlank()
+                || !(issuer.startsWith("https://") || issuer.startsWith("http://localhost")
+                || issuer.startsWith("http://127.0.0.1"))) {
+            throw new IllegalStateException(
+                    "JWT_ISSUER must be a non-empty HTTPS URL or a localhost development URL");
         }
     }
 
@@ -57,7 +67,9 @@ public class SecurityConfig {
 
     @Bean JwtDecoder jwtDecoder() {
         var key = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
+        var decoder = NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
+        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuer));
+        return decoder;
     }
 
     @Bean SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
