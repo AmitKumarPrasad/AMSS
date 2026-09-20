@@ -60,7 +60,8 @@ public class AttendanceService {
     public List<AttendanceView> history(UUID schoolId, UUID studentId, LocalDate from, LocalDate to) {
         studentRepository.findById(studentId)
                 .filter(s -> schoolId.equals(s.getSchoolId()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+                .filter(s -> "ACTIVE".equals(s.getStatus()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Active student not found"));
         if (from == null || to == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from and to are required");
         }
