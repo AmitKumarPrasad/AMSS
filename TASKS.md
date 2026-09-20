@@ -24,7 +24,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Audit all tenant/school-scoped repositories.
 - [x] Audit controllers for authorization and input validation.
 - [x] Add/strengthen service-layer tests for state transitions.
-- [ ] Add consistent API error handling.
+- [x] Add consistent API error handling.
 - [ ] Review database migration coverage.
 - [ ] Review AI orchestrator configuration and secret handling.
 - [ ] Add health/readiness checks where missing.
@@ -40,6 +40,13 @@ This file is the implementation source of truth for the next development batches
 - Request DTOs use Bean Validation; audited free-form fields have bounded lengths and staff email uses email validation.
 - AI question inputs are bounded to prevent oversized requests.
 - Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
+
+### API error-handling coverage
+- Standard `ApiError` contract with timestamp, status, error, message, path, requestId and validation errors.
+- Consistent handling for application `400/403/404/409/500` responses.
+- Bean Validation and constraint-violation details are returned as bounded field/message entries.
+- Internal exception details are not exposed by generic or persistence error handlers.
+- `X-Request-ID` is preserved when safe and generated when absent/invalid.
 
 ### Service state-transition test coverage
 - Assessment: DRAFT -> PUBLISHED, invalid status rejection, CANCELLED -> PUBLISHED rejection, tenant-scoped lookup.

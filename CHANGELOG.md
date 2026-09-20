@@ -15,6 +15,12 @@
 - Project memory.
 - Service-layer state-transition tests for assessment, academic year, staff and notifications.
 
+### API hardening
+- Added centralized REST exception handling with a stable `ApiError` response contract.
+- Added validation, access-denied, not-found, conflict and generic-error mappings.
+- Added safe request-correlation IDs through `X-Request-ID`.
+- Added regression tests ensuring internal exception details are not exposed.
+
 ### Security and hardening
 - Audited school-scoped repository access across the backend.
 - Verified school ownership checks on cross-entity ID lookups.
