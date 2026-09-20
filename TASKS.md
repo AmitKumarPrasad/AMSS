@@ -91,7 +91,8 @@ This file is the implementation source of truth for the next development batches
 - [x] Add retrieval/RAG boundary.
 - [x] Add AI audit/observability.
 
-- [ ] Add domain-safe school context filtering.
+- [x] Add domain-safe school context filtering.
+
 
 ### AI audit/observability
 - AI ask and RAG indexing operations emit tenant/user-scoped audit events using the existing audit_events table.
@@ -114,6 +115,12 @@ This file is the implementation source of truth for the next development batches
 - LangGraph state carries request, tenant, user and role context into orchestration instructions.
 - Backend connect/read timeouts are configurable and transport failures map to a stable client exception.
 - Authentication is the next batch; the internal endpoint must remain on a private network until authenticated.
+
+### Domain-safe school context
+- AI prompts are explicitly bounded to the school-management domain.
+- Retrieved evidence is filtered before prompt construction by valid document ID, item count and total context size.
+- Evidence metadata and content are sanitized and bounded before reaching the model.
+- Retrieved content remains untrusted and cannot issue tool, role-change or prompt instructions.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
