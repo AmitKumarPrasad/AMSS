@@ -89,3 +89,10 @@
 - Added a production environment template with secret placeholders and no credentials.
 - Added a production Docker Compose baseline with private database/Redis networking, fail-closed required secrets, read-only application filesystem, dropped capabilities and healthchecks.
 - Documented production startup and operational prerequisites in README.md.
+
+### Operational runbooks
+- Added `RUNBOOK.md` for pre-deployment validation, standard deployment and post-deployment checks.
+- Added application rollback guidance with database-migration compatibility safeguards.
+- Added PostgreSQL logical backup/restore procedures and recovery validation.
+- Added local filesystem and S3-compatible document-storage backup/restore guidance.
+- Added severity-based incident response procedures with evidence preservation and secret-handling requirements.
