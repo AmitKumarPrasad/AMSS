@@ -58,6 +58,39 @@ class AiOrchestratorClientTest {
     }
 
     @Test
+    void rejectsResponseWithMismatchedCorrelationId() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        UUID requestId = UUID.randomUUID();
+        server.createContext("/internal/v1/ai/ask", exchange -> {
+            UUID differentRequestId = UUID.randomUUID();
+            byte[] response = ("{\"requestId\":\"%s\",\"answer\":\"ok\",\"citations\":[],\"status\":\"COMPLETED\"}").formatted(differentRequestId).getBytes();
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length);
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write(response);
+            }
+        });
+        server.start();
+
+        try {
+            String baseUrl = "http://localhost:" + server.getAddress().getPort();
+            AiOrchestratorClient client = new AiOrchestratorClient(
+                    org.springframework.web.client.RestClient.builder(),
+                    new AiOrchestratorProperties(baseUrl, Duration.ofSeconds(1), Duration.ofSeconds(2), "test-service-token"));
+
+            assertThatThrownBy(() -> client.ask(
+                    new AiOrchestratorClient.AiOrchestratorRequest(
+                            requestId, UUID.randomUUID(), UUID.randomUUID(),
+                            List.of("ROLE_TEACHER"), "hello", null),
+                    requestId.toString()))
+                    .isInstanceOf(AiOrchestratorClient.AiOrchestratorException.class)
+                    .hasMessage("AI orchestrator returned an invalid correlation id");
+        } finally {
+            server.stop(0);
+        }
+    }
+
+    @Test
     void mapsTransportFailureToStableOrchestratorException() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/internal/v1/ai/ask", exchange -> exchange.sendResponseHeaders(502, -1));
