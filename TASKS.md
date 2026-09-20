@@ -67,6 +67,7 @@ This file is the implementation source of truth for the next development batches
   - [x] Added bounded pagination to enrollment-by-section and enrollment-by-student APIs with deterministic ordering.
   - [x] Added bounded pagination to student-specific fee invoice lists with deterministic due-date ordering.
   - [x] Added bounded pagination to timetable section list APIs with deterministic day/time/id ordering.
+  - [x] Added bounded pagination to student guardian list APIs with deterministic primary-contact/name/id ordering.
   - [ ] Review remaining unbounded list endpoints and response contracts.
 - [ ] Backend production integration/security verification.
 
