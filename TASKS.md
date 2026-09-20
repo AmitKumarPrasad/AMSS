@@ -70,7 +70,10 @@ This file is the implementation source of truth for the next development batches
   - [x] Added bounded pagination to student guardian list APIs with deterministic primary-contact/name/id ordering.
   - [x] Added bounded database-level pagination to invoice payment history with deterministic paidAt/id ordering.
   - [x] Reviewed remaining unbounded list endpoints and removed the unused staff-scoped leave List query.
-- [ ] Backend production integration/security verification.
+- [x] Backend production integration/security verification.
+  - [x] Added JWT configuration regression coverage for strong secrets and HTTPS production issuers.
+  - [x] Added fail-closed coverage for weak/default secrets, blank issuers and non-HTTPS production issuers.
+  - [x] Verified backend compilation/tests, production container build, compose validation and application smoke test in CI.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
