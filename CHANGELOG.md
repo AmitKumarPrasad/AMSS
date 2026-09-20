@@ -15,6 +15,10 @@
 - Project memory.
 - Service-layer state-transition tests for assessment, academic year, staff and notifications.
 
+### Operations hardening
+- Added regression coverage for Actuator liveness/readiness groups.
+- Confirmed Docker and CI use the liveness probe while readiness remains available for dependency-aware orchestration.
+
 ### AI orchestrator hardening
 - Added explicit OpenAI API-key validation and MCP URL safety checks.
 - Added local `.env` template and ignore rules for runtime secrets.
