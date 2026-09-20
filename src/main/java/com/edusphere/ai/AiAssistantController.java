@@ -21,16 +21,19 @@ public class AiAssistantController {
     private final AiConversationService conversations;
     private final TenantAccess tenantAccess;
     private final AiAuditService aiAuditService;
+    private final AiRequestIdempotencyService idempotency;
 
     public AiAssistantController(RagService ragService, SchoolAiAssistant assistant,
                                  AiOrchestratorClient orchestrator, AiConversationService conversations,
-                                 TenantAccess tenantAccess, AiAuditService aiAuditService) {
+                                 TenantAccess tenantAccess, AiAuditService aiAuditService,
+                                 AiRequestIdempotencyService idempotency) {
         this.ragService = ragService;
         this.assistant = assistant;
         this.orchestrator = orchestrator;
         this.conversations = conversations;
         this.tenantAccess = tenantAccess;
         this.aiAuditService = aiAuditService;
+        this.idempotency = idempotency;
     }
 
     @PostMapping("/documents/{documentId}/index")
@@ -70,6 +73,12 @@ public class AiAssistantController {
         String effectiveRequestId = normalizeRequestId(requestId);
         long started = System.nanoTime();
         try {
+            UUID correlationId = UUID.fromString(effectiveRequestId);
+            AiRequestIdempotencyService.Claim claim = idempotency.claim(schoolId, userId, correlationId);
+            if (claim.completed()) {
+                AiRequestIdempotencyService.CachedResponse cached = idempotency.response(claim);
+                return new AssistantResponse(cached.answer(), cached.evidence(), cached.conversationId());
+            }
             List<String> roles = authentication.getAuthorities().stream()
                     .map(a -> a.getAuthority()).toList();
             List<RagService.RagResult> evidence = ragService.search(schoolId, roles, question, 8);
@@ -89,12 +98,14 @@ public class AiAssistantController {
                 conversations.appendExchange(schoolId, userId, conversationId, question, answer == null ? "" : answer);
             }
 
-            aiAuditService.record(schoolId, userId, requestId,
+            idempotency.complete(schoolId, userId, correlationId, answer == null ? "" : answer, evidence, conversationId);
+            aiAuditService.record(schoolId, userId, effectiveRequestId,
                     "ASK", "SUCCESS", elapsedMs(started), evidence.size(), question.length(),
                     answer == null ? 0 : answer.length(), null);
             return new AssistantResponse(answer, evidence, conversationId);
         } catch (RuntimeException ex) {
-            aiAuditService.record(schoolId, userId, requestId,
+            idempotency.release(schoolId, userId, UUID.fromString(effectiveRequestId));
+            aiAuditService.record(schoolId, userId, effectiveRequestId,
                     "ASK", "ERROR", elapsedMs(started), 0, question.length(), 0,
                     ex.getClass().getSimpleName());
             throw ex;
