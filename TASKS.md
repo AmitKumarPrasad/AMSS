@@ -56,7 +56,10 @@ This file is the implementation source of truth for the next development batches
 
 ## Backend Completion Roadmap
 - [x] Complete attendance backend APIs with bulk marking, bounded history and tenant-scoped daily summary.
-- [ ] Complete fees and payments backend APIs.
+- [x] Complete fees and payments backend APIs.
+  - Added tenant-scoped school invoice pagination with bounded page size and status filtering.
+  - Added bounded payment history retrieval.
+  - Preserved invoice/payment tenant isolation, duplicate-reference protection and overpayment rejection.
 - [ ] Complete assessments/report-card backend APIs.
 - [ ] Complete notifications backend workflows and provider controls.
 - [ ] Complete documents and communication backend APIs.

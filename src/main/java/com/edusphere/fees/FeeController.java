@@ -4,7 +4,10 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -36,6 +39,17 @@ public class FeeController {
                 request.studentId(), request.invoiceNumber(), request.dueDate(), request.amount()));
     }
 
+    @GetMapping("/invoices")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','ACCOUNTANT','TEACHER')")
+    public Page<FeeService.InvoiceView> listSchoolInvoices(@PathVariable UUID schoolId,
+                                                            @RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "50") int size,
+                                                            @RequestParam(required = false) String status,
+                                                            Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return feeService.listSchoolInvoices(schoolId, page, size, status);
+    }
+
     @GetMapping("/students/{studentId}/invoices")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','ACCOUNTANT','TEACHER')")
     public List<FeeService.InvoiceView> listInvoices(@PathVariable UUID schoolId, @PathVariable UUID studentId,
@@ -58,13 +72,19 @@ public class FeeController {
     @GetMapping("/invoices/{invoiceId}/payments")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','ACCOUNTANT','TEACHER')")
     public List<FeeService.PaymentView> listPayments(@PathVariable UUID schoolId, @PathVariable UUID invoiceId,
+                                                      @RequestParam(defaultValue = "50") int limit,
                                                       Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return feeService.listPayments(schoolId, invoiceId);
+        return feeService.listPayments(schoolId, invoiceId, limit);
     }
 
-    public record CreateInvoiceRequest(@NotNull UUID studentId, @NotBlank String invoiceNumber,
-                                        @NotNull LocalDate dueDate, @NotNull @DecimalMin("0.01") BigDecimal amount) {}
-    public record RecordPaymentRequest(@NotBlank String paymentReference,
-                                       @NotNull @DecimalMin("0.01") BigDecimal amount) {}
+    public record CreateInvoiceRequest(
+            @NotNull UUID studentId,
+            @NotBlank @Size(max = 64) String invoiceNumber,
+            @NotNull LocalDate dueDate,
+            @NotNull @DecimalMin("0.01") BigDecimal amount) {}
+
+    public record RecordPaymentRequest(
+            @NotBlank @Size(max = 100) String paymentReference,
+            @NotNull @DecimalMin("0.01") BigDecimal amount) {}
 }

@@ -2,12 +2,16 @@
 
 ## 2026-09-20
 
+### Backend fees and payments completion
+- Added tenant-scoped school invoice pagination with bounded page sizes and status filtering.
+- Added bounded payment-history retrieval.
+- Preserved active-student invoice creation, duplicate payment-reference protection and overpayment rejection.
+
 ### Backend attendance completion
 - Added tenant-authorized bulk student attendance marking with duplicate-entry protection.
 - Added bounded 366-day attendance history validation.
 - Added tenant-scoped daily attendance summary API.
 - Preserved active-student and future-date validation for attendance writes.
-
 
 ## 2026-09-20
 
@@ -32,7 +36,6 @@
 
 ### Production deployment
 - Added production environment and Docker Compose deployment baselines.
-- Documented production startup and operational prerequisites in README.md.
 
 ### Production security configuration
 - Added fail-closed JWT secret validation and configured JWT issuer validation.
