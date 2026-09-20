@@ -89,8 +89,15 @@ This file is the implementation source of truth for the next development batches
 - Invalid credentials return 401; missing server configuration returns 503.
 - The service credential is never copied into tenant/user request bodies or logged.
 - [x] Add retrieval/RAG boundary.
-- [ ] Add AI audit/observability.
+- [x] Add AI audit/observability.
+
 - [ ] Add domain-safe school context filtering.
+
+### AI audit/observability
+- AI ask and RAG indexing operations emit tenant/user-scoped audit events using the existing audit_events table.
+- Audit payloads contain correlation, outcome, latency and bounded size/count metadata only; prompts, answers, credentials and document content are never persisted.
+- AI request/failure and audit-write-failure Micrometer counters are exposed through the existing actuator metrics surface.
+- Audit persistence is best-effort and never replaces or masks the primary AI operation failure.
 
 ### Retrieval/RAG boundary
 - Retrieval is strictly school-scoped and limited to published documents.
