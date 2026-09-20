@@ -67,7 +67,10 @@ This file is the implementation source of truth for the next development batches
   - Added bounded notification listing and strict request field limits.
   - Preserved tenant-scoped recipient authorization and recipient-only read mutation.
   - Preserved retry/backoff limits and email/SMS fail-closed provider controls.
-- [ ] Complete documents and communication backend APIs.
+- [x] Complete documents and communication backend APIs.
+  - Added bounded document listing and request field limits.
+  - Added paginated tenant-scoped announcements.
+  - Preserved audience filtering, document publishing/archive transitions and school isolation.
 - [ ] Complete AI assistant production APIs and conversation state.
 - [ ] Backend-wide pagination, filtering and API contract review.
 - [ ] Backend production integration/security verification.
