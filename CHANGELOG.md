@@ -79,3 +79,8 @@
 - Filtered evidence requires a valid document ID and is capped by item count, per-item content size and total context size.
 - Sanitized evidence metadata and content before prompt construction.
 - Strengthened the AI system boundary to keep responses within school-management scope and treat retrieved content as untrusted instructions.
+
+
+### Production security configuration
+- Added fail-closed JWT secret validation at application startup.
+- Secrets shorter than 32 characters or equal to the known insecure development default are rejected before JWT signing/verification is initialized.
