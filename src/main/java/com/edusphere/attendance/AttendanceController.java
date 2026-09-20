@@ -4,6 +4,7 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,5 +52,5 @@ public class AttendanceController {
         return attendanceService.history(schoolId, studentId, from, to);
     }
 
-    public record MarkAttendanceRequest(@NotNull LocalDate attendanceDate, @NotBlank String status) {}
+    public record MarkAttendanceRequest(@NotNull LocalDate attendanceDate, @NotBlank @Size(max = 30) String status) {}
 }
