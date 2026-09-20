@@ -41,6 +41,16 @@ public class AiConversationController {
         return conversations.list(schoolId, tenantAccess.currentUserId(authentication), limit);
     }
 
+    @GetMapping("/{conversationId}/messages")
+    public List<AiConversationService.MessageView> messages(
+            @PathVariable UUID schoolId,
+            @PathVariable UUID conversationId,
+            @RequestParam(defaultValue = "100") int limit,
+            Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return conversations.messages(schoolId, tenantAccess.currentUserId(authentication), conversationId, limit);
+    }
+
     @GetMapping("/{conversationId}")
     public AiConversationService.ConversationView get(
             @PathVariable UUID schoolId,
@@ -48,6 +58,16 @@ public class AiConversationController {
             Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return conversations.get(schoolId, tenantAccess.currentUserId(authentication), conversationId);
+    }
+
+    @PatchMapping("/{conversationId}")
+    public AiConversationService.ConversationView rename(
+            @PathVariable UUID schoolId,
+            @PathVariable UUID conversationId,
+            @Valid @RequestBody UpdateConversationRequest request,
+            Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return conversations.rename(schoolId, tenantAccess.currentUserId(authentication), conversationId, request.title());
     }
 
     @DeleteMapping("/{conversationId}")
@@ -60,4 +80,5 @@ public class AiConversationController {
     }
 
     public record CreateConversationRequest(@Size(max = 200) String title) {}
+    public record UpdateConversationRequest(@NotBlank @Size(max = 200) String title) {}
 }
