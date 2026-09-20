@@ -28,7 +28,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Review database migration coverage.
 - [x] Review AI orchestrator configuration and secret handling.
 - [x] Add health/readiness checks where missing.
-- [ ] Review Docker configuration for production safety.
+- [x] Review Docker configuration for production safety.
 
 ### Tenant audit result
 - School-owned list queries use schoolId predicates.
@@ -40,6 +40,13 @@ This file is the implementation source of truth for the next development batches
 - Request DTOs use Bean Validation; audited free-form fields have bounded lengths and staff email uses email validation.
 - AI question inputs are bounded to prevent oversized requests.
 - Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
+
+### Docker production safety
+- Application container runs as non-root UID `10001`.
+- Application filesystem is read-only except for the document volume and ephemeral `/tmp`.
+- Application drops all Linux capabilities and enables `no-new-privileges`.
+- Database and Redis ports are bound to localhost in the Compose baseline instead of all host interfaces.
+- Docker image healthcheck uses the application liveness endpoint.
 
 ### Health/readiness coverage
 - Actuator liveness and readiness probes are explicitly configured in `application.yml`.
