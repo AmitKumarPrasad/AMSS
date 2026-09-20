@@ -70,6 +70,8 @@ Use `docker-compose.production.yml` as the deployment baseline for a single appl
 7. Verify liveness and readiness before routing external traffic.
 8. Keep database backups and document storage backups outside the application container.
 
+See **RUNBOOK.md** for deployment, rollback, backup/restore and incident-response procedures.
+
 The production compose file is a baseline, not a substitute for a managed database, secret manager, TLS reverse proxy/load balancer, centralized logging, monitoring or disaster-recovery process.
 
 ## Document storage
@@ -97,7 +99,7 @@ The AWS SDK default credential provider chain is used, so credentials should be 
 
 ## Current status
 
-Core school-management bounded contexts, AI foundation, authenticated admin UI, local document storage, S3-compatible object storage, email notifications and atomic notification claiming are implemented and CI-verified. Remaining work is primarily production hardening: SMS provider integration, richer analytics, end-to-end integration coverage, operational runbooks and deployment infrastructure beyond the provided Compose baseline.
+Core school-management bounded contexts, AI foundation, authenticated admin UI, local document storage, S3-compatible object storage, email notifications and atomic notification claiming are implemented and CI-verified. Remaining work is primarily production hardening: SMS provider integration, richer analytics, end-to-end integration coverage and deployment infrastructure beyond the provided Compose baseline.
 
 ## Configuration
 
