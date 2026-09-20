@@ -13,6 +13,7 @@
 - Technical design baseline.
 - Implementation task tracker.
 - Project memory.
+- Service-layer state-transition tests for assessment, academic year, staff and notifications.
 
 ### Security and hardening
 - Audited school-scoped repository access across the backend.
@@ -21,4 +22,5 @@
 - Completed controller authorization and input-validation audit.
 - Added bounded request-field validation to student, staff, communication and attendance APIs.
 - Added staff email validation and bounded contact fields.
+- Added tenant and recipient ownership assertions to service-layer state-transition tests.
 - Recorded the hardening result in TASKS.md.
