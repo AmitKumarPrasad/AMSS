@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, UUID> {
     Page<LeaveRequest> findBySchoolIdOrderByCreatedAtDesc(UUID schoolId, Pageable pageable);
+    Page<LeaveRequest> findBySchoolIdAndStatusOrderByCreatedAtDesc(UUID schoolId, String status, Pageable pageable);
     List<LeaveRequest> findByStaffIdOrderByStartsOnDesc(UUID staffId);
     boolean existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(UUID staffId, String status, LocalDate endsOn, LocalDate startsOn);
 }
