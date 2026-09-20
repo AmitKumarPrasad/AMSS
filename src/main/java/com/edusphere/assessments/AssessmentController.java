@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -41,11 +42,13 @@ public class AssessmentController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
-    public List<AssessmentService.AssessmentView> list(@PathVariable UUID schoolId,
+    public Page<AssessmentService.AssessmentView> list(@PathVariable UUID schoolId,
                                                         @RequestParam UUID academicYearId,
+                                                        @RequestParam(defaultValue="0") int page,
+                                                        @RequestParam(defaultValue="50") int size,
                                                         Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return assessmentService.list(schoolId, academicYearId);
+        return assessmentService.list(schoolId, academicYearId, page, size);
     }
 
     @PatchMapping("/{assessmentId}/status")
