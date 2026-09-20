@@ -60,8 +60,7 @@ public class AttendanceService {
     public List<AttendanceView> history(UUID schoolId, UUID studentId, LocalDate from, LocalDate to) {
         studentRepository.findById(studentId)
                 .filter(s -> schoolId.equals(s.getSchoolId()))
-                .filter(s -> "ACTIVE".equals(s.getStatus()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Active student not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
         if (from == null || to == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from and to are required");
         }
@@ -88,9 +87,13 @@ public class AttendanceService {
     }
 
     private Student requireActiveStudent(UUID schoolId, UUID studentId) {
-        return studentRepository.findById(studentId)
+        Student student = studentRepository.findById(studentId)
                 .filter(s -> schoolId.equals(s.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+        if (!"ACTIVE".equals(student.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attendance can only be recorded for an active student");
+        }
+        return student;
     }
 
     private AttendanceView save(Student student, LocalDate date, String status, UUID recordedBy) {
