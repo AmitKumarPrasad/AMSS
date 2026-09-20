@@ -3,6 +3,7 @@ package com.edusphere.communication;
 import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -46,5 +47,5 @@ public class CommunicationController {
         tenantAccess.requireSchool(authentication,schoolId); service.markRead(schoolId,announcementId,tenantAccess.currentUserId(authentication));
     }
 
-    public record CreateAnnouncementRequest(@NotBlank String title,@NotBlank String body,String audienceRole){}
+    public record CreateAnnouncementRequest(@NotBlank @Size(max = 200) String title,@NotBlank @Size(max = 10000) String body,@Size(max = 50) String audienceRole){}
 }
