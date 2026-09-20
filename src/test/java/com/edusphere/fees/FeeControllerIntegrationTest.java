@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FeeControllerIntegrationTest {
     @Autowired MockMvc mvc;
     @MockitoBean FeeService feeService;
-    @MockBean TenantAccess tenantAccess;
+    @MockitoBean TenantAccess tenantAccess;
 
     @Test
     void unauthenticatedRequestIsRejected() throws Exception {
