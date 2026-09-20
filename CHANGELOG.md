@@ -2,6 +2,13 @@
 
 ## 2026-09-20
 
+### Admin Web UI
+- Modernized the authenticated dashboard with responsive sidebar navigation and mobile layout.
+- Added dashboard KPI cards for students, staff, attendance, leaves, fees and unread notifications.
+- Added searchable tenant-scoped student directory.
+- Added analytics view with bounded date-range controls and attendance/fee trend visualizations.
+- Kept the UI on existing authenticated APIs and session-based access token handling.
+
 ### Richer analytics
 - Added a tenant-scoped analytics API with bounded date ranges.
 - Added attendance and staff-attendance trends, fee collection summaries/trends and assessment activity KPIs.
