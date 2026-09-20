@@ -75,4 +75,52 @@ class AcademicYearServiceTest {
         assertEquals("2028-29", view.code());
         assertEquals("2028-29 Session", view.name());
     }
+
+    @Test
+    void activatesAcademicYearWhenNoOtherYearIsActive() {
+        UUID schoolId = UUID.randomUUID();
+        UUID yearId = UUID.randomUUID();
+        AcademicYear year = new AcademicYear(schoolId, "2029-30", "2029-30", LocalDate.of(2029, 4, 1), LocalDate.of(2030, 3, 31));
+
+        when(repository.findById(yearId)).thenReturn(java.util.Optional.of(year));
+        when(repository.existsBySchoolIdAndStatus(schoolId, "ACTIVE")).thenReturn(false);
+        when(repository.save(any(AcademicYear.class))).thenAnswer(i -> i.getArgument(0));
+
+        AcademicYearService.AcademicYearView view = service.changeStatus(schoolId, yearId, true);
+
+        assertEquals("ACTIVE", view.status());
+        verify(repository).save(year);
+    }
+
+    @Test
+    void rejectsSecondActiveAcademicYear() {
+        UUID schoolId = UUID.randomUUID();
+        UUID yearId = UUID.randomUUID();
+        AcademicYear year = new AcademicYear(schoolId, "2030-31", "2030-31", LocalDate.of(2030, 4, 1), LocalDate.of(2031, 3, 31));
+
+        when(repository.findById(yearId)).thenReturn(java.util.Optional.of(year));
+        when(repository.existsBySchoolIdAndStatus(schoolId, "ACTIVE")).thenReturn(true);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.changeStatus(schoolId, yearId, true));
+
+        assertEquals(409, ex.getStatusCode().value());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void changeStatusRejectsCrossTenantAcademicYear() {
+        UUID schoolId = UUID.randomUUID();
+        UUID otherSchool = UUID.randomUUID();
+        UUID yearId = UUID.randomUUID();
+        AcademicYear year = new AcademicYear(otherSchool, "2031-32", "2031-32", LocalDate.of(2031, 4, 1), LocalDate.of(2032, 3, 31));
+
+        when(repository.findById(yearId)).thenReturn(java.util.Optional.of(year));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.changeStatus(schoolId, yearId, true));
+
+        assertEquals(404, ex.getStatusCode().value());
+        verify(repository, never()).save(any());
+    }
 }

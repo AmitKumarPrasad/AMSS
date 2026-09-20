@@ -23,7 +23,7 @@ This file is the implementation source of truth for the next development batches
 ## Phase 3 - Hardening
 - [x] Audit all tenant/school-scoped repositories.
 - [x] Audit controllers for authorization and input validation.
-- [ ] Add/strengthen service-layer tests for state transitions.
+- [x] Add/strengthen service-layer tests for state transitions.
 - [ ] Add consistent API error handling.
 - [ ] Review database migration coverage.
 - [ ] Review AI orchestrator configuration and secret handling.
@@ -37,9 +37,16 @@ This file is the implementation source of truth for the next development batches
 - Notification worker lookups use the persisted notification school boundary.
 - Controllers consistently enforce JWT tenant access before delegating to services.
 - Mutating endpoints use role-based method security.
-- Request DTOs use Bean Validation; audited free-form fields now have bounded lengths and staff email uses email validation.
+- Request DTOs use Bean Validation; audited free-form fields have bounded lengths and staff email uses email validation.
 - AI question inputs are bounded to prevent oversized requests.
 - Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
+
+### Service state-transition test coverage
+- Assessment: DRAFT -> PUBLISHED, invalid status rejection, CANCELLED -> PUBLISHED rejection, tenant-scoped lookup.
+- Academic year: activation, single-active-year rule, tenant-scoped lookup.
+- Staff: activation/deactivation and tenant-scoped status mutation.
+- Notifications: recipient-only read mutation and tenant-scoped lookup.
+- Existing student and fee tests continue to cover important status/payment transitions.
 
 ## Phase 4 - AI
 - [ ] Define AI orchestration API contract.
