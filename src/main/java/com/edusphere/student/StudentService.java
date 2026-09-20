@@ -1,22 +1,41 @@
 package com.edusphere.student;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
 public class StudentService {
-    private final StudentRepository repository;
-    public StudentService(StudentRepository repository) { this.repository = repository; }
+    private static final int MAX_PAGE_SIZE = 100;
 
-    public List<StudentView> activeStudents(UUID schoolId) {
-        return repository.findBySchoolIdAndStatusOrderByFirstNameAsc(schoolId, "ACTIVE")
-                .stream().map(StudentView::from).toList();
+    private final StudentRepository repository;
+
+    public StudentService(StudentRepository repository) {
+        this.repository = repository;
+    }
+
+    public java.util.List<StudentView> activeStudents(UUID schoolId) {
+        return list(schoolId, "ACTIVE", null, 0, MAX_PAGE_SIZE).getContent();
+    }
+
+    public Page<StudentView> list(UUID schoolId, String status, String query, int page, int size) {
+        validatePage(page, size);
+        String normalizedStatus = normalizeStatus(status);
+        String normalizedQuery = normalizeQuery(query);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(
+                Sort.Order.asc("firstName"),
+                Sort.Order.asc("lastName"),
+                Sort.Order.asc("id")));
+        return repository.search(schoolId, normalizedStatus, normalizedQuery, pageable)
+                .map(StudentView::from);
     }
 
     @Transactional
@@ -52,6 +71,27 @@ public class StudentService {
 
     private String normalizeOptional(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String normalizeStatus(String status) {
+        String normalized = status == null || status.isBlank() ? "ACTIVE" : status.trim().toUpperCase();
+        if (!normalized.equals("ACTIVE") && !normalized.equals("INACTIVE")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status must be ACTIVE or INACTIVE");
+        }
+        return normalized;
+    }
+
+    private String normalizeQuery(String query) {
+        return query == null || query.isBlank() ? null : query.trim();
+    }
+
+    private void validatePage(int page, int size) {
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be >= 0");
+        }
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size must be between 1 and " + MAX_PAGE_SIZE);
+        }
     }
 
     public record CreateStudentRequest(String admissionNumber, String firstName, String lastName,

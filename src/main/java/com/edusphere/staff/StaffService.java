@@ -1,11 +1,15 @@
 package com.edusphere.staff;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +19,8 @@ import java.util.UUID;
 public class StaffService {
     private static final List<String> EMPLOYMENT_TYPES=List.of("FULL_TIME","PART_TIME","CONTRACT");
     private static final List<String> LEAVE_TYPES=List.of("CASUAL","SICK","EARNED","UNPAID","OTHER");
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final StaffRepository staffRepository; private final LeaveRequestRepository leaveRepository; private final JdbcTemplate jdbc;
     public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository){this(staffRepository, leaveRepository, null);}
     @Autowired
@@ -41,9 +47,17 @@ public class StaffService {
         return view(staffRepository.save(staff));
     }
 
-    @Transactional(readOnly=true) public List<StaffView> list(UUID schoolId){
-        return staffRepository.findBySchoolIdAndStatusOrderByFullNameAsc(schoolId,"ACTIVE").stream().map(this::view).toList();
+    @Transactional(readOnly=true)
+    public Page<StaffView> list(UUID schoolId, String status, String query, int page, int size){
+        validatePage(page, size);
+        String normalizedStatus = normalizeStatus(status);
+        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(
+                Sort.Order.asc("fullName"),
+                Sort.Order.asc("id")));
+        return staffRepository.search(schoolId, normalizedStatus, normalizedQuery, pageable).map(this::view);
     }
+
     @Transactional public LeaveView requestLeave(UUID schoolId, UUID staffId, CreateLeaveRequest r){
         if (r == null || r.leaveType() == null || r.startsOn() == null || r.endsOn() == null)
             bad("leaveType, startsOn and endsOn are required");
@@ -83,6 +97,8 @@ public class StaffService {
     }
 
     private String normalizeType(String v){String s=v==null?"FULL_TIME":v.trim().toUpperCase(Locale.ROOT);if(!EMPLOYMENT_TYPES.contains(s))bad("Invalid employmentType");return s;}
+    private String normalizeStatus(String status){String s=status==null||status.isBlank()?"ACTIVE":status.trim().toUpperCase(Locale.ROOT);if(!s.equals("ACTIVE")&&!s.equals("INACTIVE"))bad("status must be ACTIVE or INACTIVE");return s;}
+    private void validatePage(int page,int size){if(page<0)bad("page must be >= 0");if(size<1||size>MAX_PAGE_SIZE)bad("size must be between 1 and "+MAX_PAGE_SIZE);}
     private String requiredText(String value,String field){String s=value==null?null:value.trim();if(s==null||s.isBlank())bad(field+" is required");return s;}
     private String trim(String s){return s==null||s.isBlank()?null:s.trim();}
     private void bad(String message){throw new ResponseStatusException(HttpStatus.BAD_REQUEST,message);}
