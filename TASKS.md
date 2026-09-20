@@ -58,7 +58,7 @@ This file is the implementation source of truth for the next development batches
   - Added conversation-aware AI requests with request correlation and existing service authentication.
   - Preserved school isolation and user ownership for every conversation/message operation.
 - [x] Backend-wide pagination, filtering and API contract review.
-  - [~] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
+  - [x] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
   - [x] Added bounded pagination, status filtering and search to student and staff list APIs with deterministic ordering.
   - [x] Added bounded pagination/status filtering to academic-year lists, pagination to class lists, and pagination/search to subject lists with deterministic ordering.
   - [x] Added bounded pagination, status filtering and search to section list APIs with deterministic ordering.
@@ -70,6 +70,7 @@ This file is the implementation source of truth for the next development batches
   - [x] Added bounded pagination to student guardian list APIs with deterministic primary-contact/name/id ordering.
   - [x] Added bounded database-level pagination to invoice payment history with deterministic paidAt/id ordering.
   - [x] Reviewed remaining unbounded list endpoints and removed the unused staff-scoped leave List query.
+  - [x] Added regression tests that verify audience filtering occurs at database pagination boundaries for documents and announcements.
 - [x] Backend production integration/security verification.
   - [x] Added JWT configuration regression coverage for strong secrets and HTTPS production issuers.
   - [x] Added fail-closed coverage for weak/default secrets, blank issuers and non-HTTPS production issuers.
