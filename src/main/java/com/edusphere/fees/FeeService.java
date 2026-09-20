@@ -1,6 +1,9 @@
 package com.edusphere.fees;
 
 import com.edusphere.student.StudentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +16,9 @@ import java.util.UUID;
 
 @Service
 public class FeeService {
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final int MAX_PAYMENT_LIST_SIZE = 100;
+
     private final FeeInvoiceRepository invoiceRepository;
     private final FeePaymentRepository paymentRepository;
     private final StudentRepository studentRepository;
@@ -37,6 +43,22 @@ public class FeeService {
         }
         return toView(invoiceRepository.save(new FeeInvoice(schoolId, request.studentId(), number,
                 request.dueDate(), request.amount())));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<InvoiceView> listSchoolInvoices(UUID schoolId, int page, int size, String status) {
+        if (page < 0) bad("page must be zero or greater");
+        if (size < 1 || size > MAX_PAGE_SIZE) bad("size must be between 1 and " + MAX_PAGE_SIZE);
+        String normalizedStatus = status == null ? null : status.trim().toUpperCase();
+        if (normalizedStatus != null && !normalizedStatus.isBlank()
+                && !List.of("OPEN", "PARTIALLY_PAID", "PAID").contains(normalizedStatus)) {
+            bad("status must be OPEN, PARTIALLY_PAID or PAID");
+        }
+        PageRequest request = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dueDate"));
+        Page<FeeInvoice> invoices = normalizedStatus == null || normalizedStatus.isBlank()
+                ? invoiceRepository.findBySchoolIdOrderByDueDateDesc(schoolId, request)
+                : invoiceRepository.findBySchoolIdAndStatusOrderByDueDateDesc(schoolId, normalizedStatus, request);
+        return invoices.map(this::toView);
     }
 
     @Transactional(readOnly = true)
@@ -69,11 +91,17 @@ public class FeeService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentView> listPayments(UUID schoolId, UUID invoiceId) {
+    public List<PaymentView> listPayments(UUID schoolId, UUID invoiceId, int limit) {
+        if (limit < 1 || limit > MAX_PAYMENT_LIST_SIZE) {
+            bad("limit must be between 1 and " + MAX_PAYMENT_LIST_SIZE);
+        }
         FeeInvoice invoice = invoiceRepository.findById(invoiceId)
                 .filter(i -> schoolId.equals(i.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found"));
-        return paymentRepository.findByInvoiceIdOrderByPaidAtDesc(invoice.getId()).stream().map(this::toView).toList();
+        return paymentRepository.findByInvoiceIdOrderByPaidAtDesc(invoice.getId()).stream()
+                .limit(limit)
+                .map(this::toView)
+                .toList();
     }
 
     private void requireStudent(UUID schoolId, UUID studentId) {
@@ -94,11 +122,18 @@ public class FeeService {
         return normalized;
     }
     private void bad(String message) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
-    private InvoiceView toView(FeeInvoice i) { return new InvoiceView(i.getId(), i.getSchoolId(), i.getStudentId(), i.getInvoiceNumber(), i.getDueDate(), i.getAmount(), i.getPaidAmount(), i.getStatus()); }
-    private PaymentView toView(FeePayment p) { return new PaymentView(p.getId(), p.getInvoiceId(), p.getPaymentReference(), p.getAmount(), p.getPaidAt(), p.getStatus()); }
+    private InvoiceView toView(FeeInvoice i) {
+        return new InvoiceView(i.getId(), i.getSchoolId(), i.getStudentId(), i.getInvoiceNumber(),
+                i.getDueDate(), i.getAmount(), i.getPaidAmount(), i.getStatus());
+    }
+    private PaymentView toView(FeePayment p) {
+        return new PaymentView(p.getId(), p.getInvoiceId(), p.getPaymentReference(), p.getAmount(), p.getPaidAt(), p.getStatus());
+    }
 
     public record CreateInvoiceRequest(UUID studentId, String invoiceNumber, LocalDate dueDate, BigDecimal amount) {}
     public record RecordPaymentRequest(String paymentReference, BigDecimal amount) {}
-    public record InvoiceView(UUID id, UUID schoolId, UUID studentId, String invoiceNumber, LocalDate dueDate, BigDecimal amount, BigDecimal paidAmount, String status) {}
-    public record PaymentView(UUID id, UUID invoiceId, String paymentReference, BigDecimal amount, java.time.Instant paidAt, String status) {}
+    public record InvoiceView(UUID id, UUID schoolId, UUID studentId, String invoiceNumber, LocalDate dueDate,
+                              BigDecimal amount, BigDecimal paidAmount, String status) {}
+    public record PaymentView(UUID id, UUID invoiceId, String paymentReference, BigDecimal amount,
+                              java.time.Instant paidAt, String status) {}
 }
