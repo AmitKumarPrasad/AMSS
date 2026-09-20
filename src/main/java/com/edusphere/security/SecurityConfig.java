@@ -1,6 +1,7 @@
 package com.edusphere.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +27,21 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+    private static final int MIN_JWT_SECRET_LENGTH = 32;
+    private static final String INSECURE_DEFAULT = "change-me-in-production-use-a-random-32-byte-secret";
+
     @Value("${app.security.jwt-secret}")
     private String jwtSecret;
+
+    @PostConstruct
+    void validateJwtSecret() {
+        if (jwtSecret == null || jwtSecret.isBlank()
+                || jwtSecret.length() < MIN_JWT_SECRET_LENGTH
+                || INSECURE_DEFAULT.equals(jwtSecret)) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be configured with a random secret of at least 32 characters");
+        }
+    }
 
     @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
 
