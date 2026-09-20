@@ -45,6 +45,7 @@ This file is the implementation source of truth for the next development batches
 - [x] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
   - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped student/invoice/payment records and duplicate payment-reference protection.
   - Added JWT tenant-context coverage proving same-school access and cross-school rejection through TenantAccess.
+  - Added MockMvc authorization coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
 - [ ] SMS provider integration.
 - [ ] Richer analytics.
 
