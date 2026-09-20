@@ -57,7 +57,7 @@ This file is the implementation source of truth for the next development batches
   - Added bounded persistent message history with strict message/title limits.
   - Added conversation-aware AI requests with request correlation and existing service authentication.
   - Preserved school isolation and user ownership for every conversation/message operation.
-- [ ] Backend-wide pagination, filtering and API contract review.
+- [x] Backend-wide pagination, filtering and API contract review.
   - [~] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
   - [x] Added bounded pagination, status filtering and search to student and staff list APIs with deterministic ordering.
   - [x] Added bounded pagination/status filtering to academic-year lists, pagination to class lists, and pagination/search to subject lists with deterministic ordering.
@@ -69,7 +69,7 @@ This file is the implementation source of truth for the next development batches
   - [x] Added bounded pagination to timetable section list APIs with deterministic day/time/id ordering.
   - [x] Added bounded pagination to student guardian list APIs with deterministic primary-contact/name/id ordering.
   - [x] Added bounded database-level pagination to invoice payment history with deterministic paidAt/id ordering.
-  - [ ] Review remaining unbounded list endpoints and response contracts.
+  - [x] Reviewed remaining unbounded list endpoints and removed the unused staff-scoped leave List query.
 - [ ] Backend production integration/security verification.
 
 ## Working Rule
