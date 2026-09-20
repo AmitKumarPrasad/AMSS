@@ -61,6 +61,7 @@ This file is the implementation source of truth for the next development batches
   - [~] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
   - [x] Added bounded pagination, status filtering and search to student and staff list APIs with deterministic ordering.
   - [x] Added bounded pagination/status filtering to academic-year lists, pagination to class lists, and pagination/search to subject lists with deterministic ordering.
+  - [x] Added bounded pagination, status filtering and search to section list APIs with deterministic ordering.
   - [ ] Review remaining unbounded list endpoints and response contracts.
 - [ ] Backend production integration/security verification.
 
