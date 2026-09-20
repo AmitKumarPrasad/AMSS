@@ -66,10 +66,14 @@ public class AssessmentService {
     }
 
     @Transactional(readOnly = true)
-    public List<AssessmentView> list(UUID schoolId, UUID academicYearId) {
+    public Page<AssessmentView> list(UUID schoolId, UUID academicYearId, int page, int size) {
         requireAcademicYear(schoolId, academicYearId);
-        return assessmentRepository.findBySchoolIdAndAcademicYearIdOrderByAssessmentDateDesc(schoolId, academicYearId)
-                .stream().map(this::toView).toList();
+        if (page < 0) bad("page must be >= 0");
+        if (size < 1 || size > 100) bad("size must be between 1 and 100");
+        return assessmentRepository.findBySchoolIdAndAcademicYearIdOrderByAssessmentDateDesc(
+                schoolId, academicYearId,
+                PageRequest.of(page, size, Sort.by(Sort.Order.desc("assessmentDate"), Sort.Order.desc("id"))))
+                .map(this::toView);
     }
 
     @Transactional
