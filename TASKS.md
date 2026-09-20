@@ -81,7 +81,13 @@ This file is the implementation source of truth for the next development batches
 
 ## Phase 4 - AI
 - [x] Define AI orchestration API contract.
-- [ ] Add secure backend-to-orchestrator authentication.
+- [x] Add secure backend-to-orchestrator authentication.
+
+### AI orchestrator authentication
+- Backend sends a dedicated `Authorization: Bearer` service credential from environment configuration.
+- Python validates the credential with constant-time comparison and fails closed when unconfigured.
+- Invalid credentials return 401; missing server configuration returns 503.
+- The service credential is never copied into tenant/user request bodies or logged.
 - [ ] Add retrieval/RAG boundary.
 - [ ] Add AI audit/observability.
 - [ ] Add domain-safe school context filtering.
