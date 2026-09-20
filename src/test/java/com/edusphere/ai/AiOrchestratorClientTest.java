@@ -22,6 +22,7 @@ class AiOrchestratorClientTest {
         UUID userId = UUID.randomUUID();
 
         server.createContext("/internal/v1/ai/ask", exchange -> {
+            assertThat(exchange.getRequestHeaders().getFirst("Authorization")).isEqualTo("Bearer test-service-token");
             assertThat(exchange.getRequestHeaders().getFirst("X-Request-ID")).isEqualTo(requestId.toString());
             assertThat(exchange.getRequestHeaders().getFirst("X-School-ID")).isEqualTo(schoolId.toString());
             assertThat(exchange.getRequestHeaders().getFirst("X-User-ID")).isEqualTo(userId.toString());
@@ -39,7 +40,7 @@ class AiOrchestratorClientTest {
             String baseUrl = "http://localhost:" + server.getAddress().getPort();
             AiOrchestratorClient client = new AiOrchestratorClient(
                     org.springframework.web.client.RestClient.builder(),
-                    new AiOrchestratorProperties(baseUrl, Duration.ofSeconds(1), Duration.ofSeconds(2)));
+                    new AiOrchestratorProperties(baseUrl, Duration.ofSeconds(1), Duration.ofSeconds(2), "test-service-token"));
 
             var response = client.ask(
                     new AiOrchestratorClient.AiOrchestratorRequest(

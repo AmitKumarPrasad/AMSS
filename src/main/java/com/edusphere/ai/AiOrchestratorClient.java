@@ -15,6 +15,7 @@ import java.util.UUID;
 @Service
 public class AiOrchestratorClient {
     private final RestClient client;
+    private final String serviceToken;
 
     @Autowired
     public AiOrchestratorClient(RestClient.Builder builder, AiOrchestratorProperties properties) {
@@ -23,6 +24,7 @@ public class AiOrchestratorClient {
                 .build();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(properties.readTimeout());
+        this.serviceToken = properties.serviceToken();
         this.client = builder
                 .baseUrl(properties.baseUrl())
                 .requestFactory(factory)
@@ -31,12 +33,14 @@ public class AiOrchestratorClient {
 
     AiOrchestratorClient(RestClient client) {
         this.client = client;
+        this.serviceToken = "";
     }
 
     public AiOrchestratorResponse ask(AiOrchestratorRequest request, String requestId) {
         try {
             return client.post()
                     .uri("/internal/v1/ai/ask")
+                    .header("Authorization", "Bearer " + serviceToken)
                     .header("X-Request-ID", requestId)
                     .header("X-School-ID", request.schoolId().toString())
                     .header("X-User-ID", request.userId().toString())
@@ -49,6 +53,7 @@ public class AiOrchestratorClient {
             throw new AiOrchestratorException("AI orchestrator is unavailable", ex);
         }
     }
+
 
     public record AiOrchestratorRequest(
             UUID requestId,
