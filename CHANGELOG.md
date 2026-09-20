@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+### Backend assessments and report cards
+- Added bulk assessment-result recording with duplicate-student protection.
+- Added marks and grade validation with assessment-state enforcement.
+- Added tenant-scoped academic-year report-card aggregation.
+
 ### Backend fees and payments completion
 - Added tenant-scoped school invoice pagination with bounded page sizes and status filtering.
 - Added bounded payment-history retrieval.
