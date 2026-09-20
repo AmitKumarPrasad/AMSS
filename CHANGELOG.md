@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+### Richer analytics
+- Added a tenant-scoped analytics API with bounded date ranges.
+- Added attendance and staff-attendance trends, fee collection summaries/trends and assessment activity KPIs.
+- Added school-level authorization before analytics evaluation and avoided returning student-level identifying data.
+
 ### SMS provider integration
 - Added Twilio SMS delivery for queued SMS notifications with tenant-scoped recipient lookup.
 - Added optional user phone storage through a Flyway migration.
