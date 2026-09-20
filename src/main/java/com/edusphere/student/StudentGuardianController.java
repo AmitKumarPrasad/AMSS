@@ -4,11 +4,11 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,9 +24,12 @@ public class StudentGuardianController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER','PARENT')")
-    public List<StudentGuardianService.GuardianView> list(@PathVariable UUID schoolId, @PathVariable UUID studentId, Authentication authentication) {
+    public Page<StudentGuardianService.GuardianView> list(@PathVariable UUID schoolId, @PathVariable UUID studentId,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "50") int size,
+                                                           Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return service.list(schoolId, studentId);
+        return service.list(schoolId, studentId, page, size);
     }
 
     @PostMapping
