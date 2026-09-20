@@ -1,5 +1,8 @@
 package com.edusphere.academics;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,12 +10,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
 @Service
 public class TimetableService {
+    private static final int MAX_PAGE_SIZE = 100;
     private final TimetableEntryRepository repository;
     private final SectionRepository sectionRepository;
     private final SchoolClassRepository classRepository;
@@ -63,12 +66,17 @@ public class TimetableService {
     }
 
     @Transactional(readOnly = true)
-    public List<TimetableView> list(UUID schoolId, UUID sectionId) {
+    public Page<TimetableView> list(UUID schoolId, UUID sectionId, int page, int size) {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
         requireClass(schoolId, section.getClassId());
-        return repository.findBySectionIdAndStatusOrderByDayOfWeekAscStartsAtAsc(sectionId, "ACTIVE")
-                .stream().map(this::toView).toList();
+        if (page < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be >= 0");
+        if (size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size must be between 1 and " + MAX_PAGE_SIZE);
+        }
+        PageRequest request = PageRequest.of(page, size,
+                Sort.by(Sort.Order.asc("dayOfWeek"), Sort.Order.asc("startsAt"), Sort.Order.asc("id")));
+        return repository.findBySectionIdAndStatus(sectionId, "ACTIVE", request).map(this::toView);
     }
 
     private SchoolClass requireClass(UUID schoolId, UUID classId) {
