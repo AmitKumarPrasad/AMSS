@@ -3,11 +3,11 @@ package com.edusphere.academics;
 import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -15,17 +15,17 @@ import java.util.UUID;
 public class SubjectController {
     private final SubjectService service;
     private final TenantAccess tenantAccess;
-
-    public SubjectController(SubjectService service, TenantAccess tenantAccess) {
-        this.service = service;
-        this.tenantAccess = tenantAccess;
-    }
+    public SubjectController(SubjectService service, TenantAccess tenantAccess) { this.service = service; this.tenantAccess = tenantAccess; }
 
     @GetMapping("/subjects")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
-    public List<SubjectService.SubjectView> list(@PathVariable UUID schoolId, Authentication authentication) {
+    public Page<SubjectService.SubjectView> list(@PathVariable UUID schoolId,
+                                                  @RequestParam(required=false) String q,
+                                                  @RequestParam(defaultValue="0") int page,
+                                                  @RequestParam(defaultValue="50") int size,
+                                                  Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return service.list(schoolId);
+        return service.list(schoolId,q,page,size);
     }
 
     @PostMapping("/subjects")
@@ -47,7 +47,7 @@ public class SubjectController {
 
     @GetMapping("/classes/{classId}/subjects")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
-    public List<SubjectService.ClassSubjectView> listForClass(@PathVariable UUID schoolId,
+    public java.util.List<SubjectService.ClassSubjectView> listForClass(@PathVariable UUID schoolId,
                                                                @PathVariable UUID classId,
                                                                Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
