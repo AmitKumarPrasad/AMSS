@@ -43,35 +43,20 @@ This file is the implementation source of truth for the next development batches
 - [x] Deployment configuration for production environments.
 - [x] Operational runbooks for deployment, rollback, backup/restore and incident response.
 - [x] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
-  - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped students, invoices and payments and duplicate payment-reference protection.
-  - Added JWT tenant-context coverage proving same-school access and cross-school rejection through TenantAccess.
-  - Added MockMvc coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
 - [x] SMS provider integration.
-  - Added Twilio SMS delivery for queued SMS notifications with tenant-scoped recipient lookup.
-  - SMS delivery remains disabled by default until production credentials are configured.
 - [x] Richer analytics.
-  - Added tenant-scoped date-range analytics for student attendance, staff attendance, fee collection and assessment activity.
-  - Added bounded 366-day reporting windows with school authorization at the API boundary.
 
 ## Backend Completion Roadmap
 - [x] Complete attendance backend APIs with bulk marking, bounded history and tenant-scoped daily summary.
 - [x] Complete fees and payments backend APIs.
-  - Added tenant-scoped school invoice pagination with bounded page size and status filtering.
-  - Added bounded payment history retrieval.
-  - Preserved invoice/payment tenant isolation, duplicate-reference protection and overpayment rejection.
 - [x] Complete assessments/report-card backend APIs.
-  - Added bulk result recording with duplicate-student protection.
-  - Added strict marks/grade validation and assessment-state enforcement.
-  - Added tenant-scoped academic-year report-card aggregation.
 - [x] Complete notifications backend workflows and provider controls.
-  - Added bounded notification listing and strict request field limits.
-  - Preserved tenant-scoped recipient authorization and recipient-only read mutation.
-  - Preserved retry/backoff limits and email/SMS fail-closed provider controls.
 - [x] Complete documents and communication backend APIs.
-  - Added bounded document listing and request field limits.
-  - Added paginated tenant-scoped announcements.
-  - Preserved audience filtering, document publishing/archive transitions and school isolation.
-- [ ] Complete AI assistant production APIs and conversation state.
+- [x] Complete AI assistant production APIs and conversation state.
+  - Added tenant- and user-scoped conversation creation, listing, retrieval and deletion.
+  - Added bounded persistent message history with strict message/title limits.
+  - Added conversation-aware AI requests with request correlation and existing service authentication.
+  - Preserved school isolation and user ownership for every conversation/message operation.
 - [ ] Backend-wide pagination, filtering and API contract review.
 - [ ] Backend production integration/security verification.
 

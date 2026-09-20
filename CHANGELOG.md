@@ -2,6 +2,14 @@
 
 ## 2026-09-20
 
+### Backend AI assistant and conversation state
+- Added tenant- and user-scoped AI conversation persistence.
+- Added bounded conversation listing and message history.
+- Added create, list, get and delete conversation APIs.
+- Added conversation-aware assistant requests with persistent user/assistant turns.
+- Preserved JWT tenant authorization and user ownership boundaries.
+- Reused existing backend-to-orchestrator service authentication and request correlation.
+
 ### Backend documents and communication
 - Added bounded document listing and request field limits.
 - Added paginated tenant-scoped announcements.
