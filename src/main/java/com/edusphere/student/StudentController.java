@@ -4,6 +4,7 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -52,8 +53,8 @@ public class StudentController {
     }
 
     public record CreateStudentRequest(
-            @NotBlank String admissionNumber,
-            @NotBlank String firstName,
-            String lastName,
+            @NotBlank @Size(max = 50) String admissionNumber,
+            @NotBlank @Size(max = 100) String firstName,
+            @Size(max = 100) String lastName,
             LocalDate dateOfBirth) {}
 }
