@@ -1,16 +1,18 @@
 package com.edusphere.academics;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 @Service
 public class SubjectService {
+    private static final int MAX_PAGE_SIZE = 100;
     private final SubjectRepository subjectRepository;
     private final ClassSubjectRepository classSubjectRepository;
     private final SchoolClassRepository classRepository;
@@ -27,7 +29,7 @@ public class SubjectService {
         if (schoolId == null || request == null) bad("schoolId and subject request are required");
         if (request.code() == null || request.code().isBlank()) bad("code is required");
         if (request.name() == null || request.name().isBlank()) bad("name is required");
-        String code = request.code().trim().toUpperCase(Locale.ROOT);
+        String code = request.code().trim().toUpperCase(java.util.Locale.ROOT);
         String name = request.name().trim();
         if (subjectRepository.existsBySchoolIdAndCode(schoolId, code)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Subject code already exists");
@@ -37,10 +39,12 @@ public class SubjectService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubjectView> list(UUID schoolId) {
+    public Page<SubjectView> list(UUID schoolId, String query, int page, int size) {
         if (schoolId == null) bad("schoolId is required");
-        return subjectRepository.findBySchoolIdAndStatusOrderByNameAsc(schoolId, "ACTIVE")
-                .stream().map(this::toView).toList();
+        validatePage(page,size);
+        String normalizedQuery=query==null||query.isBlank()?null:query.trim();
+        PageRequest request=PageRequest.of(page,size,Sort.by(Sort.Order.asc("name"),Sort.Order.asc("id")));
+        return subjectRepository.search(schoolId,normalizedQuery,request).map(this::toView);
     }
 
     @Transactional
@@ -60,7 +64,7 @@ public class SubjectService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClassSubjectView> listForClass(UUID schoolId, UUID classId) {
+    public java.util.List<ClassSubjectView> listForClass(UUID schoolId, UUID classId) {
         if (schoolId == null || classId == null) bad("schoolId and classId are required");
         classRepository.findById(classId).filter(value -> schoolId.equals(value.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Class not found"));
@@ -71,16 +75,10 @@ public class SubjectService {
                 .toList();
     }
 
-    private SubjectView toView(Subject value) {
-        return new SubjectView(value.getId(), value.getSchoolId(), value.getCode(), value.getName(), value.getStatus());
-    }
-
-    private ClassSubjectView toClassSubjectView(ClassSubject link, Subject subject) {
-        return new ClassSubjectView(link.getId(), link.getClassId(), subject.getId(), subject.getCode(), subject.getName(), link.getStatus());
-    }
-
+    private void validatePage(int page,int size){if(page<0)bad("page must be >= 0");if(size<1||size>MAX_PAGE_SIZE)bad("size must be between 1 and "+MAX_PAGE_SIZE);}
+    private SubjectView toView(Subject value) { return new SubjectView(value.getId(), value.getSchoolId(), value.getCode(), value.getName(), value.getStatus()); }
+    private ClassSubjectView toClassSubjectView(ClassSubject link, Subject subject) { return new ClassSubjectView(link.getId(), link.getClassId(), subject.getId(), subject.getCode(), subject.getName(), link.getStatus()); }
     private void bad(String message) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
-
     public record CreateSubjectRequest(String code, String name) {}
     public record SubjectView(UUID id, UUID schoolId, String code, String name, String status) {}
     public record ClassSubjectView(UUID id, UUID classId, UUID subjectId, String subjectCode, String subjectName, String status) {}
