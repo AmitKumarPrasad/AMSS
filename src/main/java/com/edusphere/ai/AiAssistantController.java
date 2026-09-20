@@ -67,6 +67,7 @@ public class AiAssistantController {
         }
         UUID userId = tenantAccess.currentUserId(authentication);
         UUID conversationId = request.conversationId() == null ? null : request.conversationId();
+        String effectiveRequestId = requestId == null || requestId.isBlank() ? UUID.randomUUID().toString() : requestId.trim();
         long started = System.nanoTime();
         try {
             List<String> roles = authentication.getAuthorities().stream()
@@ -82,8 +83,8 @@ public class AiAssistantController {
                 String prompt = buildBoundedPrompt(history, question);
                 AiOrchestratorClient.AiOrchestratorResponse response = orchestrator.ask(
                         new AiOrchestratorClient.AiOrchestratorRequest(
-                                UUID.randomUUID(), schoolId, userId, roles, prompt, conversationId.toString()),
-                        requestId == null || requestId.isBlank() ? UUID.randomUUID().toString() : requestId);
+                                UUID.fromString(effectiveRequestId), schoolId, userId, roles, prompt, conversationId.toString()),
+                        effectiveRequestId);
                 answer = response.answer();
                 conversations.appendExchange(schoolId, userId, conversationId, question, answer == null ? "" : answer);
             }
