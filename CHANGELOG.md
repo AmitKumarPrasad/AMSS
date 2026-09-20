@@ -57,7 +57,6 @@
 - Added tenant and recipient ownership assertions to service-layer state-transition tests.
 - Recorded the hardening result in TASKS.md.
 
-
 ### Retrieval/RAG boundary
 - Hardened RAG retrieval with strict school and published-document revalidation.
 - Restricted document audience metadata to supported roles and rejected unknown retrieval roles.
@@ -67,3 +66,9 @@
 - Added fail-closed backend-to-orchestrator service authentication.
 - Added constant-time Python token validation and regression coverage.
 - Kept service credentials in environment configuration rather than source control or request payloads.
+
+### AI audit and observability
+- Added tenant/user-scoped audit events for AI requests and RAG indexing using the existing `audit_events` infrastructure.
+- Persisted only correlation, outcome, latency and bounded count/length metadata; prompts, answers, document content and credentials are excluded.
+- Added Micrometer counters for AI requests, AI failures and audit persistence failures.
+- Audit persistence is best-effort so observability failures do not mask the primary AI operation result.
