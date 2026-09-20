@@ -2,6 +2,15 @@
 
 ## 2026-09-20
 
+### Backend attendance completion
+- Added tenant-authorized bulk student attendance marking with duplicate-entry protection.
+- Added bounded 366-day attendance history validation.
+- Added tenant-scoped daily attendance summary API.
+- Preserved active-student and future-date validation for attendance writes.
+
+
+## 2026-09-20
+
 ### Richer analytics
 - Added a tenant-scoped analytics API with bounded date ranges.
 - Added attendance and staff-attendance trends, fee collection summaries/trends and assessment activity KPIs.
