@@ -20,6 +20,7 @@ public class StaffService {
     private static final List<String> EMPLOYMENT_TYPES=List.of("FULL_TIME","PART_TIME","CONTRACT");
     private static final List<String> LEAVE_TYPES=List.of("CASUAL","SICK","EARNED","UNPAID","OTHER");
     private static final int MAX_PAGE_SIZE = 100;
+    private static final int MAX_LEAVE_QUERY_SIZE = 100;
 
     private final StaffRepository staffRepository; private final LeaveRequestRepository leaveRepository; private final JdbcTemplate jdbc;
     public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository){this(staffRepository, leaveRepository, null);}
@@ -27,75 +28,46 @@ public class StaffService {
     public StaffService(StaffRepository staffRepository, LeaveRequestRepository leaveRepository, JdbcTemplate jdbc){this.staffRepository=staffRepository;this.leaveRepository=leaveRepository;this.jdbc=jdbc;}
 
     @Transactional public StaffView create(UUID schoolId, CreateStaffRequest r){
-        if (r == null || r.employeeCode() == null || r.fullName() == null || r.designation() == null)
-            bad("employeeCode, fullName and designation are required");
-        String code=requiredText(r.employeeCode(),"employeeCode");
-        String name=requiredText(r.fullName(),"fullName");
-        String designation=requiredText(r.designation(),"designation");
+        if (r == null || r.employeeCode() == null || r.fullName() == null || r.designation() == null) bad("employeeCode, fullName and designation are required");
+        String code=requiredText(r.employeeCode(),"employeeCode"), name=requiredText(r.fullName(),"fullName"), designation=requiredText(r.designation(),"designation");
         if(r.joinedOn()!=null && r.joinedOn().isAfter(LocalDate.now())) bad("joinedOn cannot be in the future");
-        if(staffRepository.existsBySchoolIdAndEmployeeCode(schoolId,code))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Employee code already exists");
-        String type=normalizeType(r.employmentType());
-        StaffMember s=new StaffMember(schoolId,code,name,trim(r.email()),trim(r.phone()),designation,type,r.joinedOn());
+        if(staffRepository.existsBySchoolIdAndEmployeeCode(schoolId,code)) throw new ResponseStatusException(HttpStatus.CONFLICT,"Employee code already exists");
+        StaffMember s=new StaffMember(schoolId,code,name,trim(r.email()),trim(r.phone()),designation,normalizeType(r.employmentType()),r.joinedOn());
         return view(staffRepository.save(s));
     }
     @Transactional public StaffView changeStatus(UUID schoolId, UUID staffId, boolean active){
-        StaffMember staff=staffRepository.findById(staffId)
-                .filter(s -> schoolId.equals(s.getSchoolId()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff member not found"));
-        if(active) staff.activate(); else staff.deactivate();
-        return view(staffRepository.save(staff));
+        StaffMember staff=staffRepository.findById(staffId).filter(s -> schoolId.equals(s.getSchoolId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff member not found"));
+        if(active) staff.activate(); else staff.deactivate(); return view(staffRepository.save(staff));
     }
-
-    @Transactional(readOnly=true)
-    public Page<StaffView> list(UUID schoolId, String status, String query, int page, int size){
-        validatePage(page, size);
-        String normalizedStatus = normalizeStatus(status);
-        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(
-                Sort.Order.asc("fullName"),
-                Sort.Order.asc("id")));
-        return staffRepository.search(schoolId, normalizedStatus, normalizedQuery, pageable).map(this::view);
+    @Transactional(readOnly=true) public Page<StaffView> list(UUID schoolId, String status, String query, int page, int size){
+        validatePage(page,size); String normalizedStatus=normalizeStatus(status); String normalizedQuery=query==null||query.isBlank()?null:query.trim();
+        return staffRepository.search(schoolId,normalizedStatus,normalizedQuery,PageRequest.of(page,size,Sort.by(Sort.Order.asc("fullName"),Sort.Order.asc("id")))).map(this::view);
     }
-
     @Transactional public LeaveView requestLeave(UUID schoolId, UUID staffId, CreateLeaveRequest r){
-        if (r == null || r.leaveType() == null || r.startsOn() == null || r.endsOn() == null)
-            bad("leaveType, startsOn and endsOn are required");
-        StaffMember staff=staffRepository.findById(staffId)
-                .filter(s->schoolId.equals(s.getSchoolId())&&"ACTIVE".equals(s.getStatus()))
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Staff member not found"));
-        if(r.startsOn().isAfter(r.endsOn())) bad("startsOn must be on or before endsOn");
-        if (r.startsOn().isBefore(LocalDate.now())) bad("startsOn cannot be in the past");
-        String type=requiredText(r.leaveType(),"leaveType").toUpperCase(Locale.ROOT);
-        if(!LEAVE_TYPES.contains(type)) bad("Invalid leaveType");
-        if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"APPROVED",r.endsOn(),r.startsOn()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
-        if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"PENDING",r.endsOn(),r.startsOn()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps pending leave");
-        return leave(leaveRepository.save(new LeaveRequest(schoolId,staffId,type,r.startsOn(),r.endsOn(),trim(r.reason()))));
+        if (r == null || r.leaveType() == null || r.startsOn() == null || r.endsOn() == null) bad("leaveType, startsOn and endsOn are required");
+        StaffMember staff=staffRepository.findById(staffId).filter(s->schoolId.equals(s.getSchoolId())&&"ACTIVE".equals(s.getStatus())).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Staff member not found"));
+        if(r.startsOn().isAfter(r.endsOn())) bad("startsOn must be on or before endsOn"); if (r.startsOn().isBefore(LocalDate.now())) bad("startsOn cannot be in the past");
+        String type=requiredText(r.leaveType(),"leaveType").toUpperCase(Locale.ROOT); if(!LEAVE_TYPES.contains(type)) bad("Invalid leaveType");
+        if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"APPROVED",r.endsOn(),r.startsOn())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
+        if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"PENDING",r.endsOn(),r.startsOn())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps pending leave");
+        return leave(leaveRepository.save(new LeaveRequest(schoolId,staffId,type,r.startsOn(),r.endsOn(),trim(r.reason())));
     }
-    @Transactional(readOnly=true) public List<LeaveView> leaves(UUID schoolId){
-        return leaveRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId).stream().map(this::leave).toList();
+    @Transactional(readOnly=true) public Page<LeaveView> leaves(UUID schoolId,int page,int size,String status){
+        validatePage(page,size); if(size>MAX_LEAVE_QUERY_SIZE) bad("size must be between 1 and "+MAX_LEAVE_QUERY_SIZE);
+        String normalized=status==null||status.isBlank()?null:status.trim().toUpperCase(Locale.ROOT);
+        if(normalized!=null&&!List.of("PENDING","APPROVED","REJECTED").contains(normalized)) bad("status must be PENDING, APPROVED or REJECTED");
+        return leaveRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId,PageRequest.of(page,size,Sort.by(Sort.Order.desc("createdAt"),Sort.Order.desc("id")))).map(this::leave);
     }
     @Transactional public LeaveView review(UUID schoolId,UUID leaveId,String status,UUID reviewer){
-        if (status == null || status.isBlank()) bad("status is required");
-        if (reviewer == null) bad("reviewer is required");
-        if (jdbc != null && !reviewerBelongsToSchool(schoolId, reviewer))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reviewer not found");
-        LeaveRequest l=leaveRepository.findById(leaveId).filter(x->schoolId.equals(x.getSchoolId()))
-                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave request not found"));
-        String s=status.trim().toUpperCase(Locale.ROOT);
-        if(!List.of("APPROVED","REJECTED").contains(s)) bad("status must be APPROVED or REJECTED");
+        if (status == null || status.isBlank()) bad("status is required"); if (reviewer == null) bad("reviewer is required");
+        if (jdbc != null && !reviewerBelongsToSchool(schoolId, reviewer)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Reviewer not found");
+        LeaveRequest l=leaveRepository.findById(leaveId).filter(x->schoolId.equals(x.getSchoolId())).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave request not found"));
+        String s=status.trim().toUpperCase(Locale.ROOT); if(!List.of("APPROVED","REJECTED").contains(s)) bad("status must be APPROVED or REJECTED");
         if(!"PENDING".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave request already reviewed");
-        if("APPROVED".equals(s)&&leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(l.getStaffId(),"APPROVED",l.getEndsOn(),l.getStartsOn()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
+        if("APPROVED".equals(s)&&leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(l.getStaffId(),"APPROVED",l.getEndsOn(),l.getStartsOn())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
         l.review(s,reviewer); return leave(leaveRepository.save(l));
     }
-    private boolean reviewerBelongsToSchool(UUID schoolId, UUID reviewerId) {
-        return Boolean.TRUE.equals(jdbc.query("SELECT EXISTS (SELECT 1 FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE')",
-                rs -> { rs.next(); return rs.getBoolean(1); }, reviewerId, schoolId));
-    }
-
+    private boolean reviewerBelongsToSchool(UUID schoolId, UUID reviewerId){return Boolean.TRUE.equals(jdbc.query("SELECT EXISTS (SELECT 1 FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE')",rs->{rs.next();return rs.getBoolean(1);},reviewerId,schoolId));}
     private String normalizeType(String v){String s=v==null?"FULL_TIME":v.trim().toUpperCase(Locale.ROOT);if(!EMPLOYMENT_TYPES.contains(s))bad("Invalid employmentType");return s;}
     private String normalizeStatus(String status){String s=status==null||status.isBlank()?"ACTIVE":status.trim().toUpperCase(Locale.ROOT);if(!s.equals("ACTIVE")&&!s.equals("INACTIVE"))bad("status must be ACTIVE or INACTIVE");return s;}
     private void validatePage(int page,int size){if(page<0)bad("page must be >= 0");if(size<1||size>MAX_PAGE_SIZE)bad("size must be between 1 and "+MAX_PAGE_SIZE);}
