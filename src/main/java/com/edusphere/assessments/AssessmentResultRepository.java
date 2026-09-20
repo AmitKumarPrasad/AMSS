@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface AssessmentResultRepository extends JpaRepository<AssessmentResult, UUID> {
     Optional<AssessmentResult> findByAssessmentIdAndStudentId(UUID assessmentId, UUID studentId);
     List<AssessmentResult> findByAssessmentIdOrderByStudentIdAsc(UUID assessmentId);
+    List<AssessmentResult> findByAssessmentIdInAndStudentId(List<UUID> assessmentIds, UUID studentId);
 }
