@@ -89,3 +89,10 @@ notifications:
   email:
     enabled: ${NOTIFICATIONS_EMAIL_ENABLED:false}
     from: ${NOTIFICATIONS_EMAIL_FROM:no-reply@amss.local}
+  sms:
+    enabled: ${NOTIFICATIONS_SMS_ENABLED:false}
+    twilio:
+      base-url: ${NOTIFICATIONS_SMS_TWILIO_BASE_URL:https://api.twilio.com}
+      account-sid: ${NOTIFICATIONS_SMS_TWILIO_ACCOUNT_SID:}
+      auth-token: ${NOTIFICATIONS_SMS_TWILIO_AUTH_TOKEN:}
+      from: ${NOTIFICATIONS_SMS_TWILIO_FROM:}
