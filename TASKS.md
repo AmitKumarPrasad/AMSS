@@ -41,13 +41,10 @@ This file is the implementation source of truth for the next development batches
 ## Production Hardening Roadmap
 - [x] Security review: fail closed on weak JWT secrets and enforce configured JWT issuer validation.
 - [x] Deployment configuration for production environments.
-  - Added `.env.production.example` with secret placeholders and no committed credentials.
-  - Added `docker-compose.production.yml` with private database/Redis networking, required secrets, read-only app filesystem, dropped capabilities and healthchecks.
-  - Documented production startup, liveness/readiness checks and external infrastructure requirements in README.md.
 - [x] Operational runbooks for deployment, rollback, backup/restore and incident response.
-  - Added `RUNBOOK.md` covering pre-deployment checks, deployment, rollback, PostgreSQL backup/restore, document-storage recovery, incident response and recovery validation.
-  - Included evidence-preservation, secret-handling and tenant-isolation checks.
-- [ ] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
+- [x] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
+  - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped student/invoice/payment records and duplicate payment-reference protection.
+  - Added JWT tenant-context coverage proving same-school access and cross-school rejection through TenantAccess.
 - [ ] SMS provider integration.
 - [ ] Richer analytics.
 
