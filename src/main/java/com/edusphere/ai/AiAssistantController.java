@@ -103,6 +103,7 @@ public class AiAssistantController {
                     answer == null ? 0 : answer.length(), null);
             return new AssistantResponse(answer, evidence, conversationId);
         } catch (RuntimeException ex) {
+            idempotency.release(schoolId, userId, UUID.fromString(effectiveRequestId));
             aiAuditService.record(schoolId, userId, effectiveRequestId,
                     "ASK", "ERROR", elapsedMs(started), 0, question.length(), 0,
                     ex.getClass().getSimpleName());
