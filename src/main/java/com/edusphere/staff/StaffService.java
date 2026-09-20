@@ -56,7 +56,8 @@ public class StaffService {
         validatePage(page,size); if(size>MAX_LEAVE_QUERY_SIZE) bad("size must be between 1 and "+MAX_LEAVE_QUERY_SIZE);
         String normalized=status==null||status.isBlank()?null:status.trim().toUpperCase(Locale.ROOT);
         if(normalized!=null&&!List.of("PENDING","APPROVED","REJECTED").contains(normalized)) bad("status must be PENDING, APPROVED or REJECTED");
-        return leaveRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId,PageRequest.of(page,size,Sort.by(Sort.Order.desc("createdAt"),Sort.Order.desc("id")))).map(this::leave);
+        PageRequest pageable=PageRequest.of(page,size,Sort.by(Sort.Order.desc("createdAt"),Sort.Order.desc("id")));
+        return (normalized==null?leaveRepository.findBySchoolIdOrderByCreatedAtDesc(schoolId,pageable):leaveRepository.findBySchoolIdAndStatusOrderByCreatedAtDesc(schoolId,normalized,pageable)).map(this::leave);
     }
     @Transactional public LeaveView review(UUID schoolId,UUID leaveId,String status,UUID reviewer){
         if (status == null || status.isBlank()) bad("status is required"); if (reviewer == null) bad("reviewer is required");
