@@ -21,12 +21,13 @@ class NotificationServiceTest {
     @Mock NotificationRepository repository;
     @Mock JdbcTemplate jdbc;
     @Mock EmailNotificationProvider emailProvider;
+    @Mock SmsNotificationProvider smsProvider;
 
     private NotificationService service;
 
     @BeforeEach
     void setUp() {
-        service = new NotificationService(repository, jdbc, emailProvider);
+        service = new NotificationService(repository, jdbc, emailProvider, smsProvider);
     }
 
     @Test

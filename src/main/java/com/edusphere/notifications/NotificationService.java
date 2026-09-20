@@ -19,9 +19,14 @@ public class NotificationService {
     private final NotificationRepository repository;
     private final JdbcTemplate jdbc;
     private final EmailNotificationProvider emailProvider;
+    private final SmsNotificationProvider smsProvider;
 
-    public NotificationService(NotificationRepository repository, JdbcTemplate jdbc, EmailNotificationProvider emailProvider) {
-        this.repository = repository; this.jdbc = jdbc; this.emailProvider = emailProvider;
+    public NotificationService(NotificationRepository repository, JdbcTemplate jdbc,
+                               EmailNotificationProvider emailProvider, SmsNotificationProvider smsProvider) {
+        this.repository = repository;
+        this.jdbc = jdbc;
+        this.emailProvider = emailProvider;
+        this.smsProvider = smsProvider;
     }
 
     @Transactional
@@ -47,7 +52,8 @@ public class NotificationService {
     public NotificationView markRead(UUID schoolId, UUID notificationId, UUID userId) {
         Notification notification = get(schoolId, notificationId);
         if (!userId.equals(notification.getRecipientUserId())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Notification recipient mismatch");
-        notification.markRead(); return view(repository.save(notification));
+        notification.markRead();
+        return view(repository.save(notification));
     }
 
     @Transactional
@@ -63,7 +69,12 @@ public class NotificationService {
                 emailProvider.send(email, n.getSubject(), n.getBody());
                 n.markSent(); repository.save(n); return true;
             }
-            markFailed(n.getSchoolId(), n.getId(), "SMS provider is not configured");
+            if ("SMS".equals(n.getChannel())) {
+                String phone = jdbc.queryForObject("SELECT phone FROM app_users WHERE id=? AND school_id=? AND status='ACTIVE'", String.class, n.getRecipientUserId(), n.getSchoolId());
+                smsProvider.send(phone, n.getBody());
+                n.markSent(); repository.save(n); return true;
+            }
+            markFailed(n.getSchoolId(), n.getId(), "Unsupported notification channel");
             return false;
         } catch (Exception ex) {
             markFailed(n.getSchoolId(), n.getId(), ex.getMessage());

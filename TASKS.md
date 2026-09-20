@@ -46,7 +46,10 @@ This file is the implementation source of truth for the next development batches
   - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped student/invoice/payment records and duplicate payment-reference protection.
   - Added JWT tenant-context coverage proving same-school access and cross-school rejection through TenantAccess.
   - Added MockMvc authorization coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
-- [ ] SMS provider integration.
+- [x] SMS provider integration.
+  - Added Twilio SMS delivery for queued SMS notifications.
+  - Added tenant-scoped active-user phone lookup and retry-safe failure handling.
+  - SMS delivery remains disabled by default until production credentials are configured.
 - [ ] Richer analytics.
 
 ## Working Rule
