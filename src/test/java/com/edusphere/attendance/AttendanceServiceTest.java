@@ -39,9 +39,11 @@ class AttendanceServiceTest {
 
     @Test void normalizesStatusAndUpdatesExistingRecord() {
         UUID school = UUID.randomUUID(), studentId = UUID.randomUUID(), user = UUID.randomUUID();
-        Student student = new Student(school, "A1", "Amit", null, null);
-        assertNotNull(student.getId());
-        AttendanceRecord existing = new AttendanceRecord(school, student.getId(), LocalDate.of(2026, 9, 18), "ABSENT", "MANUAL", user);
+        Student student = mock(Student.class);
+        when(student.getId()).thenReturn(studentId);
+        when(student.getSchoolId()).thenReturn(school);
+        when(student.getStatus()).thenReturn("ACTIVE");
+        AttendanceRecord existing = new AttendanceRecord(school, studentId, LocalDate.of(2026, 9, 18), "ABSENT", "MANUAL", user);
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
         when(attendanceRepository.findBySchoolIdAndStudentIdAndAttendanceDate(school, studentId, existing.getAttendanceDate()))
             .thenReturn(Optional.of(existing));
