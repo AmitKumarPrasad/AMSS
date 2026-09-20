@@ -76,6 +76,24 @@ public class AssessmentService {
     }
 
     @Transactional
+    public AssessmentView changeStatus(UUID schoolId, UUID assessmentId, String status) {
+        if (assessmentId == null || status == null || status.isBlank()) {
+            bad("assessmentId and status are required");
+        }
+        Assessment assessment = assessmentRepository.findByIdAndSchoolId(assessmentId, schoolId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assessment not found"));
+        String normalizedStatus = status.trim().toUpperCase();
+        if (!List.of("DRAFT", "PUBLISHED", "CANCELLED").contains(normalizedStatus)) {
+            bad("status must be one of DRAFT, PUBLISHED or CANCELLED");
+        }
+        if ("PUBLISHED".equals(normalizedStatus) && "CANCELLED".equals(assessment.getStatus())) {
+            bad("Cancelled assessment cannot be published");
+        }
+        assessment.changeStatus(normalizedStatus);
+        return toView(assessmentRepository.save(assessment));
+    }
+
+    @Transactional
     public ResultView recordResult(UUID schoolId, UUID assessmentId, UUID studentId,
                                    BigDecimal marks, String grade, UUID recordedBy) {
         if (assessmentId == null || studentId == null || marks == null) bad("assessmentId, studentId and marks are required");
