@@ -2,7 +2,6 @@ package com.edusphere.ai;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,7 +95,7 @@ public class AiRequestIdempotencyService {
                 """, answer, evidenceJson, conversationId, schoolId, userId, requestId);
     }
 
-    public AssistantResponse response(Claim claim) {
+    public CachedResponse response(Claim claim) {
         if (!claim.completed()) {
             throw new IllegalArgumentException("claim is not completed");
         }
@@ -104,7 +103,7 @@ public class AiRequestIdempotencyService {
             List<RagService.RagResult> evidence = objectMapper.readValue(
                     claim.stored().evidenceJson(),
                     objectMapper.getTypeFactory().constructCollectionType(List.class, RagService.RagResult.class));
-            return new AssistantResponse(claim.stored().answer(), evidence, claim.stored().conversationId());
+            return new CachedResponse(claim.stored().answer(), evidence, claim.stored().conversationId());
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("failed to deserialize cached AI response", ex);
         }
@@ -123,5 +122,5 @@ public class AiRequestIdempotencyService {
     private record StoredRequest(String status, String answer, String evidenceJson,
                                  UUID conversationId, OffsetDateTime updatedAt) {}
 
-    public record AssistantResponse(String answer, List<RagService.RagResult> evidence, UUID conversationId) {}
+    public record CachedResponse(String answer, List<RagService.RagResult> evidence, UUID conversationId) {}
 }
