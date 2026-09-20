@@ -27,7 +27,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Add consistent API error handling.
 - [x] Review database migration coverage.
 - [x] Review AI orchestrator configuration and secret handling.
-- [ ] Add health/readiness checks where missing.
+- [x] Add health/readiness checks where missing.
 - [ ] Review Docker configuration for production safety.
 
 ### Tenant audit result
@@ -40,6 +40,12 @@ This file is the implementation source of truth for the next development batches
 - Request DTOs use Bean Validation; audited free-form fields have bounded lengths and staff email uses email validation.
 - AI question inputs are bounded to prevent oversized requests.
 - Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
+
+### Health/readiness coverage
+- Actuator liveness and readiness probes are explicitly configured in `application.yml`.
+- Docker healthcheck uses the liveness endpoint.
+- CI smoke tests wait for liveness and report readiness status.
+- Added a Spring Boot regression test verifying both health groups are exposed by the application context.
 
 ### AI orchestrator secret/configuration hardening
 - AI orchestrator now fails closed when `OPENAI_API_KEY` is missing.
