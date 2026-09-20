@@ -72,3 +72,10 @@
 - Persisted only correlation, outcome, latency and bounded count/length metadata; prompts, answers, document content and credentials are excluded.
 - Added Micrometer counters for AI requests, AI failures and audit persistence failures.
 - Audit persistence is best-effort so observability failures do not mask the primary AI operation result.
+
+
+### Domain-safe school context
+- Added a bounded school-context filter before retrieved evidence reaches the AI prompt.
+- Filtered evidence requires a valid document ID and is capped by item count, per-item content size and total context size.
+- Sanitized evidence metadata and content before prompt construction.
+- Strengthened the AI system boundary to keep responses within school-management scope and treat retrieved content as untrusted instructions.
