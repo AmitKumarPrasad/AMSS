@@ -87,6 +87,7 @@ This file is the implementation source of truth for the next development batches
 - [ ] Add domain-safe school context filtering.
 
 ### AI orchestration contract
+- Contract CI remediation aligned Java HTTP testing and LangChain/MCP dependency compatibility.
 - Backend client contract carries requestId, schoolId, userId, roles, message and optional conversationId.
 - Trusted context is propagated as X-Request-ID, X-School-ID, X-User-ID and X-User-Roles.
 - Python validates that trusted headers match the JSON tenant/user/role context.
