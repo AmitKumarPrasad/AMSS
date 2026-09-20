@@ -16,6 +16,7 @@ import java.util.UUID;
 @Service
 public class AttendanceService {
     private static final Set<String> VALID_STATUSES = Set.of("PRESENT", "ABSENT", "LATE", "EXCUSED");
+    private static final int MAX_HISTORY_DAYS = 366;
 
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
@@ -27,27 +28,32 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceView mark(UUID schoolId, UUID studentId, LocalDate date, String status, UUID recordedBy) {
-        Student student = studentRepository.findById(studentId)
-                .filter(s -> schoolId.equals(s.getSchoolId()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+        validateDate(date);
+        Student student = requireActiveStudent(schoolId, studentId);
+        return save(student, date, normalizeStatus(status), recordedBy);
+    }
 
-        if (date == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate is required");
-        if (date.isAfter(LocalDate.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate cannot be in the future");
-        }
-        if (!"ACTIVE".equals(student.getStatus())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attendance can only be recorded for an active student");
-        String normalizedStatus = status == null ? "" : status.trim().toUpperCase(Locale.ROOT);
-        if (!VALID_STATUSES.contains(normalizedStatus)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "status must be one of PRESENT, ABSENT, LATE, EXCUSED");
+    @Transactional
+    public List<AttendanceView> markBulk(UUID schoolId, LocalDate date,
+                                         List<AttendanceController.BulkEntry> entries, UUID recordedBy) {
+        validateDate(date);
+        if (entries == null || entries.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entries are required");
         }
 
-        AttendanceRecord record = attendanceRepository
-                .findBySchoolIdAndStudentIdAndAttendanceDate(schoolId, studentId, date)
-                .orElseGet(() -> new AttendanceRecord(schoolId, studentId, date,
-                        normalizedStatus, "MANUAL", recordedBy));
-        if (record.getId() != null) record.update(normalizedStatus, "MANUAL", recordedBy);
-        return toView(attendanceRepository.save(record));
+        Set<UUID> uniqueStudentIds = entries.stream()
+                .map(AttendanceController.BulkEntry::studentId)
+                .collect(java.util.stream.Collectors.toSet());
+        if (uniqueStudentIds.size() != entries.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "entries must not contain duplicate studentId values");
+        }
+
+        return entries.stream()
+                .map(entry -> {
+                    Student student = requireActiveStudent(schoolId, entry.studentId());
+                    return save(student, date, normalizeStatus(entry.status()), recordedBy);
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -61,9 +67,56 @@ public class AttendanceService {
         if (from.isAfter(to)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from must be on or before to");
         }
+        if (java.time.temporal.ChronoUnit.DAYS.between(from, to) + 1 > MAX_HISTORY_DAYS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendance history range must not exceed 366 days");
+        }
         return attendanceRepository
-                .findBySchoolIdAndStudentIdAndAttendanceDateBetweenOrderByAttendanceDateDesc(schoolId, studentId, from, to)
+                .findBySchoolIdAndStudentIdAndAttendanceDateBetweenOrderByAttendanceDateDesc(
+                        schoolId, studentId, from, to)
                 .stream().map(this::toView).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DailySummary dailySummary(UUID schoolId, LocalDate date) {
+        if (date == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "date is required");
+        }
+        AttendanceRepository.SummaryCounts counts = attendanceRepository.summary(schoolId, date);
+        return new DailySummary(date, counts.recorded(), counts.present(), counts.absent(),
+                counts.late(), counts.excused());
+    }
+
+    private Student requireActiveStudent(UUID schoolId, UUID studentId) {
+        return studentRepository.findById(studentId)
+                .filter(s -> schoolId.equals(s.getSchoolId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
+    }
+
+    private AttendanceView save(Student student, LocalDate date, String status, UUID recordedBy) {
+        AttendanceRecord record = attendanceRepository
+                .findBySchoolIdAndStudentIdAndAttendanceDate(student.getSchoolId(), student.getId(), date)
+                .orElseGet(() -> new AttendanceRecord(student.getSchoolId(), student.getId(), date,
+                        status, "MANUAL", recordedBy));
+        if (record.getId() != null) {
+            record.update(status, "MANUAL", recordedBy);
+        }
+        return toView(attendanceRepository.save(record));
+    }
+
+    private static void validateDate(LocalDate date) {
+        if (date == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate is required");
+        if (date.isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "attendanceDate cannot be in the future");
+        }
+    }
+
+    private static String normalizeStatus(String status) {
+        String normalized = status == null ? "" : status.trim().toUpperCase(Locale.ROOT);
+        if (!VALID_STATUSES.contains(normalized)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "status must be one of PRESENT, ABSENT, LATE, EXCUSED");
+        }
+        return normalized;
     }
 
     private AttendanceView toView(AttendanceRecord record) {
@@ -73,4 +126,7 @@ public class AttendanceService {
 
     public record AttendanceView(UUID id, UUID schoolId, UUID studentId, LocalDate attendanceDate,
                                  String status, String source, UUID recordedBy) {}
+
+    public record DailySummary(LocalDate date, long recorded, long present, long absent,
+                               long late, long excused) {}
 }
