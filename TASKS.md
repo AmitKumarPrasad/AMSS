@@ -22,7 +22,7 @@ This file is the implementation source of truth for the next development batches
 
 ## Phase 3 - Hardening
 - [x] Audit all tenant/school-scoped repositories.
-- [ ] Audit controllers for authorization and input validation.
+- [x] Audit controllers for authorization and input validation.
 - [ ] Add/strengthen service-layer tests for state transitions.
 - [ ] Add consistent API error handling.
 - [ ] Review database migration coverage.
@@ -33,9 +33,13 @@ This file is the implementation source of truth for the next development batches
 ### Tenant audit result
 - School-owned list queries use schoolId predicates.
 - Entity lookups by ID are followed by explicit school ownership checks before returning or mutating data.
-- Cross-entity lookups (student, section, class, academic year, subject, invoice, document, notification, staff) are chained through school ownership validation.
-- Notification worker lookups intentionally operate on the claimed notification's persisted school boundary rather than accepting a caller-supplied school ID.
-- No unaudited controller/service path was found that returns another school's data from the reviewed repository set.
+- Cross-entity lookups are chained through school ownership validation.
+- Notification worker lookups use the persisted notification school boundary.
+- Controllers consistently enforce JWT tenant access before delegating to services.
+- Mutating endpoints use role-based method security.
+- Request DTOs use Bean Validation; audited free-form fields now have bounded lengths and staff email uses email validation.
+- AI question inputs are bounded to prevent oversized requests.
+- Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
 
 ## Phase 4 - AI
 - [ ] Define AI orchestration API contract.
