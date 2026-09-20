@@ -62,6 +62,7 @@ This file is the implementation source of truth for the next development batches
   - [x] Added bounded pagination, status filtering and search to student and staff list APIs with deterministic ordering.
   - [x] Added bounded pagination/status filtering to academic-year lists, pagination to class lists, and pagination/search to subject lists with deterministic ordering.
   - [x] Added bounded pagination, status filtering and search to section list APIs with deterministic ordering.
+  - [x] Added bounded pagination and status filtering to staff leave lists with deterministic ordering.
   - [ ] Review remaining unbounded list endpoints and response contracts.
 - [ ] Backend production integration/security verification.
 
