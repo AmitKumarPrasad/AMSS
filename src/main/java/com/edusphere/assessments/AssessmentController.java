@@ -4,19 +4,13 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -76,6 +70,18 @@ public class AssessmentController {
                 tenantAccess.currentUserId(authentication));
     }
 
+    @PostMapping("/{assessmentId}/results/bulk")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
+    public List<AssessmentService.ResultView> recordResults(@PathVariable UUID schoolId,
+                                                             @PathVariable UUID assessmentId,
+                                                             @Valid @RequestBody BulkResultsRequest request,
+                                                             Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return assessmentService.recordResults(schoolId, assessmentId,
+                request.entries().stream().map(e -> new AssessmentService.ResultEntry(e.studentId(), e.marks(), e.grade())).toList(),
+                tenantAccess.currentUserId(authentication));
+    }
+
     @GetMapping("/{assessmentId}/results")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public List<AssessmentService.ResultView> results(@PathVariable UUID schoolId,
@@ -85,11 +91,24 @@ public class AssessmentController {
         return assessmentService.results(schoolId, assessmentId);
     }
 
+    @GetMapping("/report-cards/{studentId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
+    public AssessmentService.ReportCardView reportCard(@PathVariable UUID schoolId,
+                                                        @PathVariable UUID studentId,
+                                                        @RequestParam UUID academicYearId,
+                                                        Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return assessmentService.reportCard(schoolId, studentId, academicYearId);
+    }
+
     public record CreateAssessmentRequest(@NotNull UUID academicYearId, @NotNull UUID classId,
-                                          @NotBlank String name, @NotNull LocalDate assessmentDate,
+                                          @NotBlank @Size(max = 120) String name, @NotNull LocalDate assessmentDate,
                                           @NotNull @DecimalMin("0.01") BigDecimal maxMarks) {}
 
-    public record RecordResultRequest(@NotNull @DecimalMin("0.00") BigDecimal marks, String grade) {}
+    public record RecordResultRequest(@NotNull @DecimalMin("0.00") BigDecimal marks, @Size(max = 16) String grade) {}
 
-    public record ChangeStatusRequest(@NotBlank String status) {}
+    public record BulkResultsRequest(@NotEmpty @Size(max = 500) List<@Valid ResultEntryRequest> entries) {}
+    public record ResultEntryRequest(@NotNull UUID studentId, @NotNull @DecimalMin("0.00") BigDecimal marks,
+                                     @Size(max = 16) String grade) {}
+    public record ChangeStatusRequest(@NotBlank @Size(max = 32) String status) {}
 }
