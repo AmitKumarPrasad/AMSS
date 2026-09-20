@@ -123,7 +123,7 @@ public class AiConversationService {
     }
 
     public List<HistoryMessage> history(UUID schoolId, UUID userId, UUID conversationId) {
-        get(schoolId, userId, conversationId);
+        ensureOwned(schoolId, userId, conversationId);
         return jdbc.query("""
                 SELECT role, content
                 FROM (
@@ -139,13 +139,30 @@ public class AiConversationService {
     }
 
     @Transactional
+    public void appendExchange(UUID schoolId, UUID userId, UUID conversationId, String userMessage, String assistantMessage) {
+        validateMessage(userMessage);
+        validateMessage(assistantMessage);
+        ensureOwned(schoolId, userId, conversationId);
+        jdbc.update("""
+                INSERT INTO ai_conversation_messages(id, conversation_id, school_id, user_id, role, content)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """, UUID.randomUUID(), conversationId, schoolId, userId, "USER", userMessage);
+        jdbc.update("""
+                INSERT INTO ai_conversation_messages(id, conversation_id, school_id, user_id, role, content)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """, UUID.randomUUID(), conversationId, schoolId, userId, "ASSISTANT", assistantMessage);
+        jdbc.update("""
+                UPDATE ai_conversations SET updated_at = now()
+                WHERE id = ? AND school_id = ? AND user_id = ?
+                """, conversationId, schoolId, userId);
+    }
+
+    @Transactional
     public void append(UUID schoolId, UUID userId, UUID conversationId, String role, String content) {
         if (!"USER".equals(role) && !"ASSISTANT".equals(role)) {
             throw new ResponseStatusException(BAD_REQUEST, "unsupported message role");
         }
-        if (content == null || content.isBlank() || content.length() > MAX_MESSAGE) {
-            throw new ResponseStatusException(BAD_REQUEST, "message must be 1 to 2000 characters");
-        }
+        validateMessage(content);
         ensureOwned(schoolId, userId, conversationId);
         jdbc.update("""
                 INSERT INTO ai_conversation_messages(id, conversation_id, school_id, user_id, role, content)
@@ -165,6 +182,12 @@ public class AiConversationService {
                 """, conversationId, schoolId, userId);
         if (deleted == 0) {
             throw new ResponseStatusException(NOT_FOUND, "conversation not found");
+        }
+    }
+
+    private void validateMessage(String content) {
+        if (content == null || content.isBlank() || content.length() > MAX_MESSAGE) {
+            throw new ResponseStatusException(BAD_REQUEST, "message must be 1 to 2000 characters");
         }
     }
 
