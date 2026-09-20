@@ -50,7 +50,7 @@ public class StaffService {
         String type=requiredText(r.leaveType(),"leaveType").toUpperCase(Locale.ROOT); if(!LEAVE_TYPES.contains(type)) bad("Invalid leaveType");
         if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"APPROVED",r.endsOn(),r.startsOn())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps approved leave");
         if(leaveRepository.existsByStaffIdAndStatusAndStartsOnLessThanEqualAndEndsOnGreaterThanEqual(staffId,"PENDING",r.endsOn(),r.startsOn())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Leave overlaps pending leave");
-        return leave(leaveRepository.save(new LeaveRequest(schoolId,staffId,type,r.startsOn(),r.endsOn(),trim(r.reason())));
+        return leave(leaveRepository.save(new LeaveRequest(schoolId,staffId,type,r.startsOn(),r.endsOn(),trim(r.reason()))));
     }
     @Transactional(readOnly=true) public Page<LeaveView> leaves(UUID schoolId,int page,int size,String status){
         validatePage(page,size); if(size>MAX_LEAVE_QUERY_SIZE) bad("size must be between 1 and "+MAX_LEAVE_QUERY_SIZE);
