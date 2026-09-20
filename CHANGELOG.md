@@ -18,4 +18,7 @@
 - Audited school-scoped repository access across the backend.
 - Verified school ownership checks on cross-entity ID lookups.
 - Verified school-scoped list queries for tenant-owned data.
-- Recorded the tenant audit result in TASKS.md.
+- Completed controller authorization and input-validation audit.
+- Added bounded request-field validation to student, staff, communication and attendance APIs.
+- Added staff email validation and bounded contact fields.
+- Recorded the hardening result in TASKS.md.
