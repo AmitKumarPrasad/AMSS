@@ -4,12 +4,12 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,8 +30,12 @@ public class AcademicYearController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
-    public List<AcademicYearService.AcademicYearView> list(@PathVariable UUID schoolId,Authentication authentication){
-        tenantAccess.requireSchool(authentication,schoolId); return service.list(schoolId);
+    public Page<AcademicYearService.AcademicYearView> list(@PathVariable UUID schoolId,
+                                                            @RequestParam(required=false) String status,
+                                                            @RequestParam(defaultValue="0") int page,
+                                                            @RequestParam(defaultValue="50") int size,
+                                                            Authentication authentication){
+        tenantAccess.requireSchool(authentication,schoolId); return service.list(schoolId,status,page,size);
     }
 
     @PostMapping

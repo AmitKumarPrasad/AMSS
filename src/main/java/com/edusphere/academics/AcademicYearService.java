@@ -1,16 +1,19 @@
 package com.edusphere.academics;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class AcademicYearService {
+    private static final int MAX_PAGE_SIZE = 100;
     private final AcademicYearRepository repository;
     public AcademicYearService(AcademicYearRepository repository){this.repository=repository;}
 
@@ -46,20 +49,26 @@ public class AcademicYearService {
     }
 
     @Transactional(readOnly=true)
-    public List<AcademicYearView> list(UUID schoolId){
-        return repository.findBySchoolIdOrderByStartsOnDesc(schoolId).stream().map(this::view).toList();
+    public Page<AcademicYearView> list(UUID schoolId, String status, int page, int size){
+        validatePage(page,size);
+        String normalizedStatus = status == null || status.isBlank() ? null : status.trim().toUpperCase();
+        if (normalizedStatus != null && !normalizedStatus.equals("ACTIVE") && !normalizedStatus.equals("INACTIVE"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"status must be ACTIVE or INACTIVE");
+        PageRequest request = PageRequest.of(page,size,Sort.by(Sort.Order.desc("startsOn"),Sort.Order.desc("id")));
+        return repository.search(schoolId,normalizedStatus,request).map(this::view);
     }
 
+    private void validatePage(int page,int size){
+        if(page<0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"page must be >= 0");
+        if(size<1||size>MAX_PAGE_SIZE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"size must be between 1 and "+MAX_PAGE_SIZE);
+    }
     private String normalize(String value, String field) {
-        if (value == null || value.isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " is required");
+        if (value == null || value.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " is required");
         return value.trim();
     }
-
     private AcademicYearView view(AcademicYear y){
         return new AcademicYearView(y.getId(),y.getSchoolId(),y.getCode(),y.getName(),y.getStartsOn(),y.getEndsOn(),y.getStatus());
     }
-
     public record CreateAcademicYearRequest(String code,String name,LocalDate startsOn,LocalDate endsOn){}
     public record AcademicYearView(UUID id,UUID schoolId,String code,String name,LocalDate startsOn,LocalDate endsOn,String status){}
 }
