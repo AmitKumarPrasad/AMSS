@@ -62,10 +62,14 @@ public class FeeService {
     }
 
     @Transactional(readOnly = true)
-    public List<InvoiceView> listInvoices(UUID schoolId, UUID studentId) {
+    public Page<InvoiceView> listInvoices(UUID schoolId, UUID studentId, int page, int size) {
         requireStudent(schoolId, studentId);
-        return invoiceRepository.findBySchoolIdAndStudentIdOrderByDueDateDesc(schoolId, studentId)
-                .stream().map(this::toView).toList();
+        if (page < 0) bad("page must be zero or greater");
+        if (size < 1 || size > MAX_PAGE_SIZE) bad("size must be between 1 and " + MAX_PAGE_SIZE);
+        PageRequest request = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "dueDate").and(Sort.by(Sort.Direction.ASC, "id")));
+        return invoiceRepository.findBySchoolIdAndStudentIdOrderByDueDateDesc(schoolId, studentId, request)
+                .map(this::toView);
     }
 
     @Transactional
