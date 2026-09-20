@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+### Backend API contract review
+- Corrected document pagination so published document pages are filtered by audience in the database.
+- Corrected announcement pagination so inaccessible audience rows do not appear as null page elements or consume page capacity.
+- Preserved tenant scoping and bounded page sizes.
+
 ### Backend AI assistant and conversation state
 - Added tenant- and user-scoped AI conversation persistence.
 - Added bounded conversation listing and message history.
@@ -64,7 +69,7 @@
 - Added fail-closed JWT secret validation and configured JWT issuer validation.
 
 ### AI hardening
-- Added secure backend-to-orchestrator authentication, RAG boundaries, AI audit observability and domain-safe school context filtering.
+- Added secure backend-to-orchestrator service authentication, RAG boundaries, AI audit observability and domain-safe school context filtering.
 
 ### API and database hardening
 - Added centralized API error handling and safe request correlation IDs.

@@ -58,6 +58,8 @@ This file is the implementation source of truth for the next development batches
   - Added conversation-aware AI requests with request correlation and existing service authentication.
   - Preserved school isolation and user ownership for every conversation/message operation.
 - [ ] Backend-wide pagination, filtering and API contract review.
+  - [~] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
+  - [ ] Review remaining unbounded list endpoints and response contracts.
 - [ ] Backend production integration/security verification.
 
 ## Working Rule
