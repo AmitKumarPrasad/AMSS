@@ -9,8 +9,6 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import create_react_agent
 
-SPRING_MCP_URL = os.getenv("SPRING_MCP_URL", "http://localhost:8080/mcp")
-MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.6")
 
 
 class AgentState(TypedDict):
@@ -27,7 +25,9 @@ def validate_configuration() -> None:
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is required for the AI orchestrator")
 
-    parsed = urlparse(SPRING_MCP_URL)
+    spring_mcp_url = os.getenv("SPRING_MCP_URL", "http://localhost:8080/mcp")
+    model_name = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.6")
+    parsed = urlparse(spring_mcp_url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise RuntimeError("SPRING_MCP_URL must be a valid HTTP(S) URL")
 
@@ -39,17 +39,19 @@ def validate_configuration() -> None:
             "set ALLOW_INSECURE_MCP_HTTP=true only for explicitly trusted development environments"
         )
 
-    if not MODEL.strip():
+    if not model_name.strip():
         raise RuntimeError("OPENAI_CHAT_MODEL must not be blank")
 
 
 async def orchestration_node(state: AgentState):
     validate_configuration()
+    spring_mcp_url = os.getenv("SPRING_MCP_URL", "http://localhost:8080/mcp")
+    model_name = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.6")
     client = MultiServerMCPClient({
-        "school": {"transport": "streamable_http", "url": SPRING_MCP_URL}
+        "school": {"transport": "streamable_http", "url": spring_mcp_url}
     })
     tools = await client.get_tools()
-    model = ChatOpenAI(model=MODEL, temperature=0)
+    model = ChatOpenAI(model=model_name, temperature=0)
     agent = create_react_agent(
         model,
         tools,
