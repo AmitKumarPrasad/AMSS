@@ -63,6 +63,7 @@ app:
       base-url: ${AI_ORCHESTRATOR_BASE_URL:http://localhost:8123}
       connect-timeout: ${AI_ORCHESTRATOR_CONNECT_TIMEOUT:2s}
       read-timeout: ${AI_ORCHESTRATOR_READ_TIMEOUT:30s}
+      service-token: ${AI_ORCHESTRATOR_SERVICE_TOKEN:}
     langgraph:
       base-url: ${LANGGRAPH_BASE_URL:http://localhost:8123}
     rag:
