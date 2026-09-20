@@ -4,12 +4,11 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -19,8 +18,7 @@ public class CommunicationController {
     private final TenantAccess tenantAccess;
     public CommunicationController(CommunicationService service,TenantAccess tenantAccess){this.service=service;this.tenantAccess=tenantAccess;}
 
-    @PostMapping("/announcements")
-    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/announcements") @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public CommunicationService.AnnouncementView create(@PathVariable UUID schoolId,@Valid @RequestBody CreateAnnouncementRequest request,Authentication authentication){
         tenantAccess.requireSchool(authentication,schoolId);
@@ -35,17 +33,16 @@ public class CommunicationController {
 
     @GetMapping("/announcements")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER','ACCOUNTANT','PARENT','STUDENT')")
-    public List<CommunicationService.AnnouncementView> list(@PathVariable UUID schoolId,@RequestParam(defaultValue="true") boolean publishedOnly,Authentication authentication){
+    public Page<CommunicationService.AnnouncementView> list(@PathVariable UUID schoolId,@RequestParam(defaultValue="true") boolean publishedOnly,
+                                                              @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="50") int size,Authentication authentication){
         tenantAccess.requireSchool(authentication,schoolId);
-        return service.list(schoolId,publishedOnly,authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList());
+        return service.list(schoolId,publishedOnly,authentication.getAuthorities().stream().map(a->a.getAuthority()).toList(),page,size);
     }
 
-    @PostMapping("/announcements/{announcementId}/read")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/announcements/{announcementId}/read") @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER','ACCOUNTANT','PARENT','STUDENT')")
     public void markRead(@PathVariable UUID schoolId,@PathVariable UUID announcementId,Authentication authentication){
         tenantAccess.requireSchool(authentication,schoolId); service.markRead(schoolId,announcementId,tenantAccess.currentUserId(authentication));
     }
-
-    public record CreateAnnouncementRequest(@NotBlank @Size(max = 200) String title,@NotBlank @Size(max = 10000) String body,@Size(max = 50) String audienceRole){}
+    public record CreateAnnouncementRequest(@NotBlank @Size(max=200) String title,@NotBlank @Size(max=10000) String body,@Size(max=50) String audienceRole){}
 }
