@@ -3,6 +3,7 @@ package com.edusphere.attendance;
 import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +42,16 @@ public class AttendanceController {
                 request.status(), tenantAccess.currentUserId(authentication));
     }
 
+    @PostMapping("/students/bulk")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
+    public List<AttendanceService.AttendanceView> markBulk(@PathVariable UUID schoolId,
+                                                            @Valid @RequestBody BulkAttendanceRequest request,
+                                                            Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return attendanceService.markBulk(schoolId, request.attendanceDate(), request.entries(),
+                tenantAccess.currentUserId(authentication));
+    }
+
     @GetMapping("/students/{studentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public List<AttendanceService.AttendanceView> history(@PathVariable UUID schoolId,
@@ -52,5 +63,24 @@ public class AttendanceController {
         return attendanceService.history(schoolId, studentId, from, to);
     }
 
-    public record MarkAttendanceRequest(@NotNull LocalDate attendanceDate, @NotBlank @Size(max = 30) String status) {}
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
+    public AttendanceService.DailySummary summary(@PathVariable UUID schoolId,
+                                                   @RequestParam LocalDate date,
+                                                   Authentication authentication) {
+        tenantAccess.requireSchool(authentication, schoolId);
+        return attendanceService.dailySummary(schoolId, date);
+    }
+
+    public record MarkAttendanceRequest(
+            @NotNull LocalDate attendanceDate,
+            @NotBlank @Size(max = 30) String status) {}
+
+    public record BulkAttendanceRequest(
+            @NotNull LocalDate attendanceDate,
+            @NotEmpty @Size(max = 500) List<@Valid BulkEntry> entries) {}
+
+    public record BulkEntry(
+            @NotNull UUID studentId,
+            @NotBlank @Size(max = 30) String status) {}
 }
