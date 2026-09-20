@@ -122,5 +122,9 @@ This file is the implementation source of truth for the next development batches
 - Evidence metadata and content are sanitized and bounded before reaching the model.
 - Retrieved content remains untrusted and cannot issue tool, role-change or prompt instructions.
 
+### Production security configuration
+- JWT startup validation rejects missing, weak or known insecure default secrets.
+- HS256 signing/verification is only initialized after the configured secret passes the minimum 32-character strength check.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
