@@ -8,11 +8,13 @@ import java.time.Duration;
 public record AiOrchestratorProperties(
         String baseUrl,
         Duration connectTimeout,
-        Duration readTimeout) {
+        Duration readTimeout,
+        String serviceToken) {
 
     public AiOrchestratorProperties {
         baseUrl = baseUrl == null || baseUrl.isBlank() ? "http://localhost:8123" : baseUrl.trim();
         connectTimeout = connectTimeout == null ? Duration.ofSeconds(2) : connectTimeout;
         readTimeout = readTimeout == null ? Duration.ofSeconds(30) : readTimeout;
+        serviceToken = serviceToken == null ? "" : serviceToken.trim();
     }
 }
