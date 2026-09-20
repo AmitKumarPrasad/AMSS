@@ -58,6 +58,11 @@
 - Recorded the hardening result in TASKS.md.
 
 
+### Retrieval/RAG boundary
+- Hardened RAG retrieval with strict school and published-document revalidation.
+- Restricted document audience metadata to supported roles and rejected unknown retrieval roles.
+- Added bounded query/top-K controls at the retrieval service boundary.
+
 ### AI orchestrator authentication
 - Added fail-closed backend-to-orchestrator service authentication.
 - Added constant-time Python token validation and regression coverage.

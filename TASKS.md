@@ -88,9 +88,16 @@ This file is the implementation source of truth for the next development batches
 - Python validates the credential with constant-time comparison and fails closed when unconfigured.
 - Invalid credentials return 401; missing server configuration returns 503.
 - The service credential is never copied into tenant/user request bodies or logged.
-- [ ] Add retrieval/RAG boundary.
+- [x] Add retrieval/RAG boundary.
 - [ ] Add AI audit/observability.
 - [ ] Add domain-safe school context filtering.
+
+### Retrieval/RAG boundary
+- Retrieval is strictly school-scoped and limited to published documents.
+- Document indexing accepts only supported audience roles.
+- Retrieval rejects unknown JWT roles instead of broadening access.
+- Retrieved document metadata is revalidated against the school, publication status and audience before evidence is returned.
+- Query length and top-K are bounded at the retrieval boundary.
 
 ### AI orchestration contract
 - Contract CI remediation aligned Java HTTP testing and LangChain/MCP dependency compatibility.
