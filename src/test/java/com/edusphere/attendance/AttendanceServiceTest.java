@@ -38,7 +38,9 @@ class AttendanceServiceTest {
     }
 
     @Test void normalizesStatusAndUpdatesExistingRecord() {
-        UUID school = UUID.randomUUID(), studentId = UUID.randomUUID(), user = UUID.randomUUID();
+        UUID school = UUID.randomUUID();
+        UUID studentId = UUID.randomUUID();
+        UUID user = UUID.randomUUID();
         Student student = mock(Student.class);
         when(student.getId()).thenReturn(studentId);
         when(student.getSchoolId()).thenReturn(school);
