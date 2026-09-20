@@ -33,6 +33,7 @@ public class AiAssistantController {
         this.conversations = conversations;
         this.tenantAccess = tenantAccess;
         this.aiAuditService = aiAuditService;
+        this.idempotency = idempotency;
     }
 
     @PostMapping("/documents/{documentId}/index")
