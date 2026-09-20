@@ -50,7 +50,9 @@ This file is the implementation source of truth for the next development batches
   - Added Twilio SMS delivery for queued SMS notifications.
   - Added tenant-scoped active-user phone lookup and retry-safe failure handling.
   - SMS delivery remains disabled by default until production credentials are configured.
-- [ ] Richer analytics.
+- [x] Richer analytics.
+  - Added tenant-scoped date-range analytics for student attendance, staff attendance, fee collection and assessment activity.
+  - Added bounded 366-day reporting windows with school authorization at the API boundary.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
