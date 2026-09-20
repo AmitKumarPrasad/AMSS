@@ -1,98 +1,25 @@
 # Changelog
 
 ## 2026-09-20
-### Fixed
-- Corrected malformed escaped Java source in the assessment module.
-- Added the missing assessment status-change service method required by the controller.
-- Confirmed GitHub Actions CI is green on commit 7227aaec12f7ba35404bc90dd39509fd82751b8f.
 
-### Added
-- Product requirements baseline.
-- Architecture baseline.
-- Engineering rules.
-- Technical design baseline.
-- Implementation task tracker.
-- Project memory.
-- Service-layer state-transition tests for assessment, academic year, staff and notifications.
-
-### Docker hardening
-- Hardened the application container with read-only filesystem, dropped capabilities, no-new-privileges and an explicit healthcheck.
-- Restricted local database and Redis host bindings to loopback by default.
-- Preserved writable document storage through the dedicated volume and `/tmp` through tmpfs.
-
-### Operations hardening
-- Added regression coverage for Actuator liveness/readiness groups.
-- Confirmed Docker and CI use the liveness probe while readiness remains available for dependency-aware orchestration.
-
-### AI orchestrator hardening
-- Added explicit OpenAI API-key validation and MCP URL safety checks.
-- Added local `.env` template and ignore rules for runtime secrets.
-- Added Python regression tests for missing secrets and unsafe MCP endpoints.
-
-### Database hardening
-- Strengthened Flyway integration coverage from a minimum migration count to all 16 versioned migrations.
-- Added schema assertions for all current application tables, vector store objects and critical evolved columns.
-
-### API hardening
-- Added centralized REST exception handling with a stable `ApiError` response contract.
-- Added validation, access-denied, not-found, conflict and generic-error mappings.
-- Added safe request-correlation IDs through `X-Request-ID`.
-- Added regression tests ensuring internal exception details are not exposed.
-
-### AI orchestration contract
-- Added a typed Spring backend client for the Python orchestration service.
-- Added configurable connect/read timeouts and stable transport failure handling.
-- Added a FastAPI `/internal/v1/ai/ask` contract with tenant, user, role and correlation validation.
-- Propagated trusted school/user/role context into LangGraph state and system instructions.
-- Added Java and Python contract regression coverage.
-- Authentication remains the next required control before exposing the internal endpoint outside a private network.
-
-### Security and hardening
-- Audited school-scoped repository access across the backend.
-- Verified school ownership checks on cross-entity ID lookups.
-- Verified school-scoped list queries for tenant-owned data.
-- Completed controller authorization and input-validation audit.
-- Added bounded request-field validation to student, staff, communication and attendance APIs.
-- Added staff email validation and bounded contact fields.
-- Added tenant and recipient ownership assertions to service-layer state-transition tests.
-- Recorded the hardening result in TASKS.md.
-
-### Retrieval/RAG boundary
-- Hardened RAG retrieval with strict school and published-document revalidation.
-- Restricted document audience metadata to supported roles and rejected unknown retrieval roles.
-- Added bounded query/top-K controls at the retrieval service boundary.
-
-### AI orchestrator authentication
-- Added fail-closed backend-to-orchestrator service authentication.
-- Added constant-time Python token validation and regression coverage.
-- Kept service credentials in environment configuration rather than source control or request payloads.
-
-### AI audit and observability
-- Added tenant/user-scoped audit events for AI requests and RAG indexing using the existing `audit_events` infrastructure.
-- Persisted only correlation, outcome, latency and bounded count/length metadata; prompts, answers, document content and credentials are excluded.
-- Added Micrometer counters for AI requests, AI failures and audit persistence failures.
-- Audit persistence is best-effort so observability failures do not mask the primary AI operation result.
-
-### Domain-safe school context
-- Added a bounded school-context filter before retrieved evidence reaches the AI prompt.
-- Filtered evidence requires a valid document ID and is capped by item count, per-item content size and total context size.
-- Sanitized evidence metadata and content before prompt construction.
-- Strengthened the AI system boundary to keep responses within school-management scope and treat retrieved content as untrusted instructions.
-
-### Production security configuration
-- Added fail-closed JWT secret validation at application startup.
-- Secrets shorter than 32 characters or equal to the known insecure development default are rejected before JWT signing/verification is initialized.
-- Added JWT issuer validation so resource-server token verification requires the configured `JWT_ISSUER` claim.
-- Added startup validation for issuer configuration, allowing HTTPS in deployed environments and localhost loopback URLs for development.
-
-### Production deployment
-- Added a production environment template with secret placeholders and no credentials.
-- Added a production Docker Compose baseline with private database/Redis networking, fail-closed required secrets, read-only application filesystem, dropped capabilities and healthchecks.
-- Documented production startup and operational prerequisites in README.md.
+### Critical workflow integration coverage
+- Added Testcontainers PostgreSQL integration coverage for school-scoped students, invoices and payments.
+- Added duplicate payment-reference protection coverage.
+- Added JWT tenant-context coverage for same-school access and cross-school rejection through TenantAccess.
 
 ### Operational runbooks
-- Added `RUNBOOK.md` for pre-deployment validation, standard deployment and post-deployment checks.
-- Added application rollback guidance with database-migration compatibility safeguards.
-- Added PostgreSQL logical backup/restore procedures and recovery validation.
-- Added local filesystem and S3-compatible document-storage backup/restore guidance.
-- Added severity-based incident response procedures with evidence preservation and secret-handling requirements.
+- Added RUNBOOK.md for deployment, rollback, backup/restore and incident response.
+
+### Production deployment
+- Added production environment and Docker Compose deployment baselines.
+- Documented production startup and operational prerequisites in README.md.
+
+### Production security configuration
+- Added fail-closed JWT secret validation and configured JWT issuer validation.
+
+### AI hardening
+- Added secure backend-to-orchestrator authentication, RAG boundaries, AI audit observability and domain-safe school context filtering.
+
+### API and database hardening
+- Added centralized API error handling and safe request correlation IDs.
+- Strengthened Flyway migration coverage and tenant-scoped validation.
