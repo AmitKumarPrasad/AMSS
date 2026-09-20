@@ -32,6 +32,7 @@ public class AiOrchestratorClient {
     }
 
     AiOrchestratorClient(RestClient client) {
+        this.serviceToken = "";
         this.client = client;
     }
 
