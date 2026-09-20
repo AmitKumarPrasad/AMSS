@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+### SMS provider integration
+- Added Twilio SMS delivery for queued SMS notifications with tenant-scoped recipient lookup.
+- Added optional user phone storage through a Flyway migration.
+- Added fail-closed SMS configuration and disabled-by-default delivery.
+
 ### Critical workflow integration coverage
 - Added Testcontainers PostgreSQL integration coverage for school-scoped students, invoices and payments.
 - Added duplicate payment-reference protection coverage.
