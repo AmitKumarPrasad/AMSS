@@ -100,7 +100,7 @@ class AiOrchestratorClientTest {
             String baseUrl = "http://localhost:" + server.getAddress().getPort();
             AiOrchestratorClient client = new AiOrchestratorClient(
                     org.springframework.web.client.RestClient.builder(),
-                    new AiOrchestratorProperties(baseUrl, Duration.ofSeconds(1), Duration.ofSeconds(2)));
+                    new AiOrchestratorProperties(baseUrl, Duration.ofSeconds(1), Duration.ofSeconds(2), ""));
 
             assertThatThrownBy(() -> client.ask(
                     new AiOrchestratorClient.AiOrchestratorRequest(
