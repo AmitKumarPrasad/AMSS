@@ -39,6 +39,14 @@
 - Added safe request-correlation IDs through `X-Request-ID`.
 - Added regression tests ensuring internal exception details are not exposed.
 
+### AI orchestration contract
+- Added a typed Spring backend client for the Python orchestration service.
+- Added configurable connect/read timeouts and stable transport failure handling.
+- Added a FastAPI `/internal/v1/ai/ask` contract with tenant, user, role and correlation validation.
+- Propagated trusted school/user/role context into LangGraph state and system instructions.
+- Added Java and Python contract regression coverage.
+- Authentication remains the next required control before exposing the internal endpoint outside a private network.
+
 ### Security and hardening
 - Audited school-scoped repository access across the backend.
 - Verified school ownership checks on cross-entity ID lookups.
