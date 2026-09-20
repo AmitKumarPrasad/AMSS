@@ -45,7 +45,7 @@ This file is the implementation source of truth for the next development batches
 - [x] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
   - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped student/invoice/payment records and duplicate payment-reference protection.
   - Added JWT tenant-context coverage proving same-school access and cross-school rejection through TenantAccess.
-  - Added MockMvc authorization coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
+  - Added MockMvc coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
 - [x] SMS provider integration.
   - Added Twilio SMS delivery for queued SMS notifications.
   - Added tenant-scoped active-user phone lookup and retry-safe failure handling.
@@ -53,6 +53,15 @@ This file is the implementation source of truth for the next development batches
 - [x] Richer analytics.
   - Added tenant-scoped date-range analytics for student attendance, staff attendance, fee collection and assessment activity.
   - Added bounded 366-day reporting windows with school authorization at the API boundary.
+
+## UI / Admin Web
+- [x] Modernize authenticated admin dashboard with responsive navigation and KPI cards.
+- [x] Add searchable student directory view using the existing tenant-scoped student API.
+- [x] Add analytics UI with date-range controls and attendance/fee trend visualizations.
+- [ ] Add dedicated UI workflows for attendance, fees, assessments and notifications.
+- [ ] Add AI assistant chat UI with citations and conversation state.
+- [ ] Add school/admin settings UI and profile management.
+- [ ] Add production frontend smoke coverage and accessibility checks.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
