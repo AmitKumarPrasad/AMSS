@@ -2,6 +2,11 @@
 
 ## 2026-09-20
 
+### Backend documents and communication
+- Added bounded document listing and request field limits.
+- Added paginated tenant-scoped announcements.
+- Preserved audience filtering, document publishing/archive transitions and school isolation.
+
 ### Backend notifications completion
 - Added bounded notification listing and strict notification request field limits.
 - Preserved tenant-scoped recipient authorization and recipient-only read mutation.
