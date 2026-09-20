@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
     List<Notification> findTop100ByStatusAndAvailableAtLessThanEqualAndClaimedByIsNullOrderByAvailableAtAsc(String status, Instant now);
-    List<Notification> findBySchoolIdAndRecipientUserIdOrderByCreatedAtDesc(UUID schoolId, UUID recipientUserId);
+    List<Notification> findTop100BySchoolIdAndRecipientUserIdOrderByCreatedAtDesc(UUID schoolId, UUID recipientUserId);
     long countBySchoolIdAndRecipientUserIdAndReadAtIsNull(UUID schoolId, UUID recipientUserId);
 
     @Modifying
