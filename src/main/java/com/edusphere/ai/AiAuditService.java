@@ -18,14 +18,13 @@ import java.util.UUID;
 public class AiAuditService {
     private static final Logger log = LoggerFactory.getLogger(AiAuditService.class);
     private final AuditEventRepository repository;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Counter auditFailureCounter;
     private final Counter requestCounter;
     private final Counter failureCounter;
 
-    public AiAuditService(AuditEventRepository repository, ObjectMapper objectMapper, MeterRegistry meterRegistry) {
+    public AiAuditService(AuditEventRepository repository, MeterRegistry meterRegistry) {
         this.repository = repository;
-        this.objectMapper = objectMapper;
         this.auditFailureCounter = meterRegistry.counter("ai.audit.write.failures");
         this.requestCounter = meterRegistry.counter("ai.requests.total");
         this.failureCounter = meterRegistry.counter("ai.requests.failures");
