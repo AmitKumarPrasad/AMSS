@@ -4,14 +4,17 @@ version = "0.1.0"
 description = "LangGraph orchestration service for EduSphere school AI"
 requires-python = ">=3.11"
 dependencies = [
-  "langgraph>=0.6,<1.0",
-  "langchain-openai>=0.3,<1.0",
-  "langchain-mcp-adapters>=0.1,<1.0",
-  "langchain-core>=0.3,<1.0",
+  "fastapi>=0.115,<1.0",
+  "uvicorn[standard]>=0.34,<1.0",
+  "langgraph>=1.0,<2.0",
+  "langchain-openai>=1.0,<2.0",
+  "langchain-mcp-adapters==0.2.0",
+  "mcp>=1.26,<2.0",
+  "langchain-core>=1.0,<2.0",
 ]
 
 [tool.setuptools]
-py-modules = ["agent"]
+py-modules = ["agent", "api"]
 
 [build-system]
 requires = ["setuptools>=75"]
