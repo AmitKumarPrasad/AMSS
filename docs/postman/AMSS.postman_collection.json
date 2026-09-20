@@ -1,0 +1,725 @@
+{
+  "info": {
+    "name": "AMSS / EduSphere API",
+    "_postman_id": "9f4a1c5d-6a6e-4b7b-8e31-2c1f9f6d2026",
+    "description": "Developer onboarding collection for AMSS. Import this collection and define baseUrl, schoolId and accessToken. Swagger/OpenAPI at {{baseUrl}}/v3/api-docs remains the complete runtime contract.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "schoolId",
+      "value": "00000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "studentId",
+      "value": "00000000-0000-0000-0000-000000000002"
+    },
+    {
+      "key": "staffId",
+      "value": "00000000-0000-0000-0000-000000000003"
+    },
+    {
+      "key": "academicYearId",
+      "value": "00000000-0000-0000-0000-000000000004"
+    },
+    {
+      "key": "classId",
+      "value": "00000000-0000-0000-0000-000000000005"
+    },
+    {
+      "key": "sectionId",
+      "value": "00000000-0000-0000-0000-000000000006"
+    },
+    {
+      "key": "subjectId",
+      "value": "00000000-0000-0000-0000-000000000007"
+    },
+    {
+      "key": "invoiceId",
+      "value": "00000000-0000-0000-0000-000000000008"
+    },
+    {
+      "key": "conversationId",
+      "value": "00000000-0000-0000-0000-000000000009"
+    },
+    {
+      "key": "documentId",
+      "value": "00000000-0000-0000-0000-000000000010"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01 Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"schooladmin\",\n  \"password\": \"your-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Students",
+      "item": [
+        {
+          "name": "List students",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/students?status=ACTIVE&page=0&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admissionNumber\": \"ADM-2026-001\",\n  \"firstName\": \"Aarav\",\n  \"lastName\": \"Kumar\",\n  \"dateOfBirth\": \"2015-06-20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "students"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate/deactivate student",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/students/{{studentId}}/status?active=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "students",
+                "{{studentId}}",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Staff",
+      "item": [
+        {
+          "name": "List staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/staff?status=ACTIVE&page=0&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "staff"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeCode\": \"EMP-001\",\n  \"fullName\": \"Priya Sharma\",\n  \"email\": \"priya@example.com\",\n  \"phone\": \"9876543210\",\n  \"designation\": \"Teacher\",\n  \"employmentType\": \"FULL_TIME\",\n  \"joinedOn\": \"2026-04-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/staff",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "staff"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Request staff leave",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"CASUAL\",\n  \"startsOn\": \"2026-09-21\",\n  \"endsOn\": \"2026-09-22\",\n  \"reason\": \"Personal work\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/staff/{{staffId}}/leave",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "staff",
+                "{{staffId}}",
+                "leave"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Academic",
+      "item": [
+        {
+          "name": "Create academic year",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"2026-27\",\n  \"name\": \"Academic Year 2026-27\",\n  \"startsOn\": \"2026-04-01\",\n  \"endsOn\": \"2027-03-31\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/academic-years",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "academic-years"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List academic years",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/academic-years?page=0&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "academic-years"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"MATH\",\n  \"name\": \"Mathematics\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/academics/subjects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "academics",
+                "subjects"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign subject to class",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/academics/classes/{{classId}}/subjects/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "academics",
+                "classes",
+                "{{classId}}",
+                "subjects",
+                "{{subjectId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Fees",
+      "item": [
+        {
+          "name": "Create invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"invoiceNumber\": \"INV-2026-001\",\n  \"dueDate\": \"2026-10-10\",\n  \"amount\": 12500.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/fees/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "fees",
+                "invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/fees/invoices?page=0&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "fees",
+                "invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Record payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentReference\": \"PAY-2026-0001\",\n  \"amount\": 5000.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/fees/invoices/{{invoiceId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "fees",
+                "invoices",
+                "{{invoiceId}}",
+                "payments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/fees/invoices/{{invoiceId}}/payments?page=0&size=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "fees",
+                "invoices",
+                "{{invoiceId}}",
+                "payments"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 AI",
+      "item": [
+        {
+          "name": "Create conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fee discussion\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/ai/conversations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "ai",
+                "conversations"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ask AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Request-ID",
+                "value": "{{$guid}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is the fee status for my student?\",\n  \"conversationId\": \"{{conversationId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/ai/ask",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "ai",
+                "ask"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Index RAG document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"School policy: students must maintain 75 percent attendance.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/ai/documents/{{documentId}}/index",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "ai",
+                "documents",
+                "{{documentId}}",
+                "index"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rename conversation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fee discussion - September\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}/ai/conversations/{{conversationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}",
+                "ai",
+                "conversations",
+                "{{conversationId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Documentation",
+      "item": [
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "api-docs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "OpenAPI YAML",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs.yaml",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "api-docs.yaml"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
