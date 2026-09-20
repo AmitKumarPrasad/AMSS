@@ -56,3 +56,9 @@
 - Added staff email validation and bounded contact fields.
 - Added tenant and recipient ownership assertions to service-layer state-transition tests.
 - Recorded the hardening result in TASKS.md.
+
+
+### AI orchestrator authentication
+- Added fail-closed backend-to-orchestrator service authentication.
+- Added constant-time Python token validation and regression coverage.
+- Kept service credentials in environment configuration rather than source control or request payloads.
