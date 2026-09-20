@@ -1,12 +1,13 @@
 package com.edusphere.operations;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -42,9 +43,6 @@ public class AnalyticsService {
         AttendanceTotals attendance = attendanceTotals(schoolId, start, end);
         FeeTotals fees = feeTotals(schoolId, start, end);
         AssessmentTotals assessments = assessmentTotals(schoolId, start, end);
-        List<AttendancePoint> attendanceTrend = attendanceTrend(schoolId, start, end);
-        List<StaffAttendancePoint> staffAttendanceTrend = staffAttendanceTrend(schoolId, start, end);
-        List<CollectionPoint> collectionTrend = collectionTrend(schoolId, start, end);
 
         return new AnalyticsView(
                 schoolId,
@@ -53,9 +51,9 @@ public class AnalyticsService {
                 attendance,
                 fees,
                 assessments,
-                attendanceTrend,
-                staffAttendanceTrend,
-                collectionTrend
+                attendanceTrend(schoolId, start, end),
+                staffAttendanceTrend(schoolId, start, end),
+                collectionTrend(schoolId, start, end)
         );
     }
 
@@ -87,13 +85,12 @@ public class AnalyticsService {
     private List<AttendancePoint> attendanceTrend(UUID schoolId, LocalDate start, LocalDate end) {
         return jdbc.query(
                 """
-                SELECT
-                    attendance_date,
-                    COUNT(*) AS recorded,
-                    COUNT(*) FILTER (WHERE status = 'PRESENT') AS present,
-                    COUNT(*) FILTER (WHERE status = 'ABSENT') AS absent,
-                    COUNT(*) FILTER (WHERE status = 'LATE') AS late,
-                    COUNT(*) FILTER (WHERE status = 'EXCUSED') AS excused
+                SELECT attendance_date,
+                       COUNT(*) AS recorded,
+                       COUNT(*) FILTER (WHERE status = 'PRESENT') AS present,
+                       COUNT(*) FILTER (WHERE status = 'ABSENT') AS absent,
+                       COUNT(*) FILTER (WHERE status = 'LATE') AS late,
+                       COUNT(*) FILTER (WHERE status = 'EXCUSED') AS excused
                 FROM attendance_records
                 WHERE school_id = ?
                   AND attendance_date BETWEEN ? AND ?
@@ -120,12 +117,11 @@ public class AnalyticsService {
     private List<StaffAttendancePoint> staffAttendanceTrend(UUID schoolId, LocalDate start, LocalDate end) {
         return jdbc.query(
                 """
-                SELECT
-                    attendance_date,
-                    COUNT(*) AS recorded,
-                    COUNT(*) FILTER (WHERE status = 'PRESENT') AS present,
-                    COUNT(*) FILTER (WHERE status = 'ABSENT') AS absent,
-                    COUNT(*) FILTER (WHERE status = 'LATE') AS late
+                SELECT attendance_date,
+                       COUNT(*) AS recorded,
+                       COUNT(*) FILTER (WHERE status = 'PRESENT') AS present,
+                       COUNT(*) FILTER (WHERE status = 'ABSENT') AS absent,
+                       COUNT(*) FILTER (WHERE status = 'LATE') AS late
                 FROM staff_attendance_records
                 WHERE school_id = ?
                   AND attendance_date BETWEEN ? AND ?
@@ -155,7 +151,7 @@ public class AnalyticsService {
                     COALESCE(SUM(amount), 0) AS invoiced,
                     COALESCE(SUM(paid_amount), 0) AS allocated_paid,
                     COALESCE(SUM(GREATEST(amount - paid_amount, 0)), 0) AS outstanding,
-                    COUNT(*) FILTER (WHERE due_date < CURRENT_DATE AND status <> 'PAID') AS overdue_count
+                    COUNT(*) FILTER (WHERE due_date < ? AND status <> 'PAID') AS overdue_count
                 FROM fee_invoices
                 WHERE school_id = ?
                   AND created_at::date BETWEEN ? AND ?
@@ -167,7 +163,7 @@ public class AnalyticsService {
                         rs.getLong("overdue_count"),
                         collectionRate(rs.getBigDecimal("allocated_paid"), rs.getBigDecimal("invoiced"))
                 ),
-                schoolId, start, end
+                end, schoolId, start, end
         );
     }
 
@@ -201,7 +197,7 @@ public class AnalyticsService {
                     COUNT(DISTINCT a.id) AS assessments,
                     COUNT(ar.id) AS results,
                     COALESCE(SUM(ar.marks), 0) AS total_marks,
-                    COALESCE(SUM(a.max_marks) / NULLIF(COUNT(DISTINCT a.id), 0), 0) AS avg_max_marks
+                    COALESCE(AVG(a.max_marks), 0) AS avg_max_marks
                 FROM assessments a
                 LEFT JOIN assessment_results ar
                     ON ar.assessment_id = a.id
@@ -231,7 +227,11 @@ public class AnalyticsService {
         if (invoiced == null || invoiced.signum() == 0) {
             return 0.0;
         }
-        return collected == null ? 0.0 : collected.multiply(BigDecimal.valueOf(100)).divide(invoiced, 2, java.math.RoundingMode.HALF_UP).doubleValue();
+        return collected == null
+                ? 0.0
+                : collected.multiply(BigDecimal.valueOf(100))
+                    .divide(invoiced, 2, RoundingMode.HALF_UP)
+                    .doubleValue();
     }
 
     public record AnalyticsView(
