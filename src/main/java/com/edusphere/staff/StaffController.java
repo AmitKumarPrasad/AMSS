@@ -4,6 +4,8 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +35,6 @@ public class StaffController {
     public List<StaffService.LeaveView> leaves(@PathVariable UUID schoolId,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.leaves(schoolId);}
     @PostMapping("/leave/{leaveId}/review") @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
     public StaffService.LeaveView review(@PathVariable UUID schoolId,@PathVariable UUID leaveId,@RequestParam String status,Authentication a){tenantAccess.requireSchool(a,schoolId);return service.review(schoolId,leaveId,status,tenantAccess.currentUserId(a));}
-    public record CreateStaff(@NotBlank String employeeCode,@NotBlank String fullName,String email,String phone,@NotBlank String designation,String employmentType,LocalDate joinedOn){}
-    public record CreateLeave(@NotBlank String leaveType,@NotNull LocalDate startsOn,@NotNull LocalDate endsOn,String reason){}
+    public record CreateStaff(@NotBlank @Size(max = 50) String employeeCode,@NotBlank @Size(max = 150) String fullName,@Email @Size(max = 254) String email,@Size(max = 30) String phone,@NotBlank @Size(max = 100) String designation,@Size(max = 50) String employmentType,LocalDate joinedOn){}
+    public record CreateLeave(@NotBlank @Size(max = 50) String leaveType,@NotNull LocalDate startsOn,@NotNull LocalDate endsOn,@Size(max = 1000) String reason){}
 }
