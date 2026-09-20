@@ -1,6 +1,8 @@
 package com.edusphere.fees;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 
@@ -14,4 +16,8 @@ public interface FeeInvoiceRepository extends JpaRepository<FeeInvoice, UUID> {
     java.util.Optional<FeeInvoice> findById(UUID id);
 
     List<FeeInvoice> findBySchoolIdAndStudentIdOrderByDueDateDesc(UUID schoolId, UUID studentId);
+
+    Page<FeeInvoice> findBySchoolIdOrderByDueDateDesc(UUID schoolId, Pageable pageable);
+
+    Page<FeeInvoice> findBySchoolIdAndStatusOrderByDueDateDesc(UUID schoolId, String status, Pageable pageable);
 }
