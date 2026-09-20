@@ -15,6 +15,7 @@ import java.util.UUID;
 @Service
 public class AiOrchestratorClient {
     private final RestClient client;
+    private final String serviceToken;
 
     @Autowired
     @Autowired
@@ -24,6 +25,7 @@ public class AiOrchestratorClient {
                 .build();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
         factory.setReadTimeout(properties.readTimeout());
+        this.serviceToken = properties.serviceToken();
         this.client = builder
                 .baseUrl(properties.baseUrl())
                 .requestFactory(factory)
@@ -38,7 +40,7 @@ public class AiOrchestratorClient {
         try {
             return client.post()
                     .uri("/internal/v1/ai/ask")
-                    .header("Authorization", "Bearer " + serviceToken())
+                    .header("Authorization", "Bearer " + serviceToken)
                     .header("X-Request-ID", requestId)
                     .header("X-School-ID", request.schoolId().toString())
                     .header("X-User-ID", request.userId().toString())
@@ -52,11 +54,6 @@ public class AiOrchestratorClient {
         }
     }
 
-    private String serviceToken() {
-        return org.springframework.util.StringUtils.hasText(System.getenv("AI_ORCHESTRATOR_SERVICE_TOKEN"))
-                ? System.getenv("AI_ORCHESTRATOR_SERVICE_TOKEN")
-                : "";
-    }
 
     public record AiOrchestratorRequest(
             UUID requestId,
