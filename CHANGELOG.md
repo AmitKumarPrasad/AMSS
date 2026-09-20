@@ -84,3 +84,8 @@
 - Secrets shorter than 32 characters or equal to the known insecure development default are rejected before JWT signing/verification is initialized.
 - Added JWT issuer validation so resource-server token verification requires the configured `JWT_ISSUER` claim.
 - Added startup validation for issuer configuration, allowing HTTPS in deployed environments and localhost loopback URLs for development.
+
+### Production deployment
+- Added a production environment template with secret placeholders and no credentials.
+- Added a production Docker Compose baseline with private database/Redis networking, fail-closed required secrets, read-only application filesystem, dropped capabilities and healthchecks.
+- Documented production startup and operational prerequisites in README.md.
