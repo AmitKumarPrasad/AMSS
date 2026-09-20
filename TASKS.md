@@ -54,5 +54,15 @@ This file is the implementation source of truth for the next development batches
   - Added tenant-scoped date-range analytics for student attendance, staff attendance, fee collection and assessment activity.
   - Added bounded 366-day reporting windows with school authorization at the API boundary.
 
+## Backend Completion Roadmap
+- [x] Complete attendance backend APIs with bulk marking, bounded history and tenant-scoped daily summary.
+- [ ] Complete fees and payments backend APIs.
+- [ ] Complete assessments/report-card backend APIs.
+- [ ] Complete notifications backend workflows and provider controls.
+- [ ] Complete documents and communication backend APIs.
+- [ ] Complete AI assistant production APIs and conversation state.
+- [ ] Backend-wide pagination, filtering and API contract review.
+- [ ] Backend production integration/security verification.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
