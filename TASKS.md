@@ -80,11 +80,19 @@ This file is the implementation source of truth for the next development batches
 - Existing student and fee tests continue to cover important status/payment transitions.
 
 ## Phase 4 - AI
-- [ ] Define AI orchestration API contract.
+- [x] Define AI orchestration API contract.
 - [ ] Add secure backend-to-orchestrator authentication.
 - [ ] Add retrieval/RAG boundary.
 - [ ] Add AI audit/observability.
 - [ ] Add domain-safe school context filtering.
+
+### AI orchestration contract
+- Backend client contract carries requestId, schoolId, userId, roles, message and optional conversationId.
+- Trusted context is propagated as X-Request-ID, X-School-ID, X-User-ID and X-User-Roles.
+- Python validates that trusted headers match the JSON tenant/user/role context.
+- LangGraph state carries request, tenant, user and role context into orchestration instructions.
+- Backend connect/read timeouts are configurable and transport failures map to a stable client exception.
+- Authentication is the next batch; the internal endpoint must remain on a private network until authenticated.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
