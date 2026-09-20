@@ -1,7 +1,6 @@
 package com.edusphere.ai;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -39,6 +38,7 @@ public class AiOrchestratorClient {
         try {
             return client.post()
                     .uri("/internal/v1/ai/ask")
+                    .header("Authorization", "Bearer " + serviceToken())
                     .header("X-Request-ID", requestId)
                     .header("X-School-ID", request.schoolId().toString())
                     .header("X-User-ID", request.userId().toString())
@@ -50,6 +50,12 @@ public class AiOrchestratorClient {
         } catch (RestClientException ex) {
             throw new AiOrchestratorException("AI orchestrator is unavailable", ex);
         }
+    }
+
+    private String serviceToken() {
+        return org.springframework.util.StringUtils.hasText(System.getenv("AI_ORCHESTRATOR_SERVICE_TOKEN"))
+                ? System.getenv("AI_ORCHESTRATOR_SERVICE_TOKEN")
+                : "";
     }
 
     public record AiOrchestratorRequest(
