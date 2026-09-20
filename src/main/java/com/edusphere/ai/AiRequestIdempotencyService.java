@@ -95,6 +95,14 @@ public class AiRequestIdempotencyService {
                 """, answer, evidenceJson, conversationId, schoolId, userId, requestId);
     }
 
+    @Transactional
+    public void release(UUID schoolId, UUID userId, UUID requestId) {
+        jdbc.update("""
+                DELETE FROM ai_request_idempotency
+                WHERE school_id = ? AND user_id = ? AND request_id = ? AND status = 'PROCESSING'
+                """, schoolId, userId, requestId);
+    }
+
     public CachedResponse response(Claim claim) {
         if (!claim.completed()) {
             throw new IllegalArgumentException("claim is not completed");
