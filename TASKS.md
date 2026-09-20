@@ -43,12 +43,11 @@ This file is the implementation source of truth for the next development batches
 - [x] Deployment configuration for production environments.
 - [x] Operational runbooks for deployment, rollback, backup/restore and incident response.
 - [x] End-to-end integration coverage for critical authentication, tenant isolation and financial workflows.
-  - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped student/invoice/payment records and duplicate payment-reference protection.
+  - Added Testcontainers PostgreSQL workflow coverage for tenant-scoped students, invoices and payments and duplicate payment-reference protection.
   - Added JWT tenant-context coverage proving same-school access and cross-school rejection through TenantAccess.
-  - Added MockMvc authorization coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
+  - Added MockMvc coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
 - [x] SMS provider integration.
-  - Added Twilio SMS delivery for queued SMS notifications.
-  - Added tenant-scoped active-user phone lookup and retry-safe failure handling.
+  - Added Twilio SMS delivery for queued SMS notifications with tenant-scoped recipient lookup.
   - SMS delivery remains disabled by default until production credentials are configured.
 - [x] Richer analytics.
   - Added tenant-scoped date-range analytics for student attendance, staff attendance, fee collection and assessment activity.
@@ -60,7 +59,10 @@ This file is the implementation source of truth for the next development batches
   - Added tenant-scoped school invoice pagination with bounded page size and status filtering.
   - Added bounded payment history retrieval.
   - Preserved invoice/payment tenant isolation, duplicate-reference protection and overpayment rejection.
-- [ ] Complete assessments/report-card backend APIs.
+- [x] Complete assessments/report-card backend APIs.
+  - Added bulk result recording with duplicate-student protection.
+  - Added strict marks/grade validation and assessment-state enforcement.
+  - Added tenant-scoped academic-year report-card aggregation.
 - [ ] Complete notifications backend workflows and provider controls.
 - [ ] Complete documents and communication backend APIs.
 - [ ] Complete AI assistant production APIs and conversation state.
