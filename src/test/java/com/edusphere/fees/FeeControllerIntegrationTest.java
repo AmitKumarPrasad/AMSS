@@ -1,10 +1,14 @@
 package com.edusphere.fees;
 
 import com.edusphere.security.TenantAccess;
+import com.edusphere.security.SchoolUserDetailsService;
+import com.edusphere.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,10 +22,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FeeController.class)
+@Import(SecurityConfig.class)
+@TestPropertySource(properties = {
+        "app.security.jwt-secret=test-secret-for-integration-tests-32-chars-minimum",
+        "app.security.issuer=http://localhost:8080"
+})
 class FeeControllerIntegrationTest {
     @Autowired MockMvc mvc;
     @MockitoBean FeeService feeService;
     @MockitoBean TenantAccess tenantAccess;
+    @MockitoBean SchoolUserDetailsService schoolUserDetailsService;
 
     @Test
     void unauthenticatedRequestIsRejected() throws Exception {
