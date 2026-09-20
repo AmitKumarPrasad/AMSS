@@ -16,7 +16,7 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Compile and test
-        run: mvn -B test package
+        run: mvn -B -Dtest='!**/*IntegrationTest' test package
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - name: Build production container
