@@ -15,6 +15,11 @@
 - Project memory.
 - Service-layer state-transition tests for assessment, academic year, staff and notifications.
 
+### AI orchestrator hardening
+- Added explicit OpenAI API-key validation and MCP URL safety checks.
+- Added local `.env` template and ignore rules for runtime secrets.
+- Added Python regression tests for missing secrets and unsafe MCP endpoints.
+
 ### Database hardening
 - Strengthened Flyway integration coverage from a minimum migration count to all 16 versioned migrations.
 - Added schema assertions for all current application tables, vector store objects and critical evolved columns.

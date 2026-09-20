@@ -2,6 +2,7 @@
 
 import os
 from typing import TypedDict
+from urllib.parse import urlparse
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
@@ -17,7 +18,29 @@ class AgentState(TypedDict):
     answer: str
 
 
+def validate_configuration() -> None:
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is required for the AI orchestrator")
+
+    parsed = urlparse(SPRING_MCP_URL)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise RuntimeError("SPRING_MCP_URL must be a valid HTTP(S) URL")
+
+    insecure_allowed = os.getenv("ALLOW_INSECURE_MCP_HTTP", "false").strip().lower() == "true"
+    local_host = parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+    if parsed.scheme == "http" and not local_host and not insecure_allowed:
+        raise RuntimeError(
+            "SPRING_MCP_URL must use HTTPS outside localhost; "
+            "set ALLOW_INSECURE_MCP_HTTP=true only for explicitly trusted development environments"
+        )
+
+    if not MODEL.strip():
+        raise RuntimeError("OPENAI_CHAT_MODEL must not be blank")
+
+
 async def orchestration_node(state: AgentState):
+    validate_configuration()
     client = MultiServerMCPClient({
         "school": {"transport": "streamable_http", "url": SPRING_MCP_URL}
     })
