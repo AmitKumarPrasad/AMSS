@@ -38,7 +38,7 @@ public class AiOrchestratorClient {
 
     public AiOrchestratorResponse ask(AiOrchestratorRequest request, String requestId) {
         try {
-            return client.post()
+            AiOrchestratorResponse response = client.post()
                     .uri("/internal/v1/ai/ask")
                     .header("Authorization", "Bearer " + serviceToken)
                     .header("X-Request-ID", requestId)
@@ -49,6 +49,10 @@ public class AiOrchestratorClient {
                     .body(request)
                     .retrieve()
                     .body(AiOrchestratorResponse.class);
+            if (response == null || response.requestId() == null || !request.requestId().equals(response.requestId())) {
+                throw new AiOrchestratorException("AI orchestrator returned an invalid correlation id", null);
+            }
+            return response;
         } catch (RestClientException ex) {
             throw new AiOrchestratorException("AI orchestrator is unavailable", ex);
         }
