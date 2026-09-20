@@ -25,7 +25,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Audit controllers for authorization and input validation.
 - [x] Add/strengthen service-layer tests for state transitions.
 - [x] Add consistent API error handling.
-- [ ] Review database migration coverage.
+- [x] Review database migration coverage.
 - [ ] Review AI orchestrator configuration and secret handling.
 - [ ] Add health/readiness checks where missing.
 - [ ] Review Docker configuration for production safety.
@@ -40,6 +40,11 @@ This file is the implementation source of truth for the next development batches
 - Request DTOs use Bean Validation; audited free-form fields have bounded lengths and staff email uses email validation.
 - AI question inputs are bounded to prevent oversized requests.
 - Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
+
+### Database migration coverage
+- Flyway integration test now requires all 16 versioned migrations to apply successfully.
+- Schema assertions cover all current JPA-backed tables plus the vector store.
+- Critical lifecycle/notification/document columns and required PostgreSQL extensions are verified.
 
 ### API error-handling coverage
 - Standard `ApiError` contract with timestamp, status, error, message, path, requestId and validation errors.
