@@ -4,7 +4,6 @@ import com.edusphere.security.TenantAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Max;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -75,11 +73,12 @@ public class FeeController {
 
     @GetMapping("/invoices/{invoiceId}/payments")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','ACCOUNTANT','TEACHER')")
-    public List<FeeService.PaymentView> listPayments(@PathVariable UUID schoolId, @PathVariable UUID invoiceId,
-                                                      @RequestParam(defaultValue = "50") int limit,
+    public Page<FeeService.PaymentView> listPayments(@PathVariable UUID schoolId, @PathVariable UUID invoiceId,
+                                                      @RequestParam(defaultValue = "0") @Min(0) int page,
+                                                      @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size,
                                                       Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
-        return feeService.listPayments(schoolId, invoiceId, limit);
+        return feeService.listPayments(schoolId, invoiceId, page, size);
     }
 
     public record CreateInvoiceRequest(
