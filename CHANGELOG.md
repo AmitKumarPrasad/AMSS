@@ -15,6 +15,11 @@
 - Project memory.
 - Service-layer state-transition tests for assessment, academic year, staff and notifications.
 
+### Docker hardening
+- Hardened the application container with read-only filesystem, dropped capabilities, no-new-privileges and an explicit healthcheck.
+- Restricted local database and Redis host bindings to loopback by default.
+- Preserved writable document storage through the dedicated volume and `/tmp` through tmpfs.
+
 ### Operations hardening
 - Added regression coverage for Actuator liveness/readiness groups.
 - Confirmed Docker and CI use the liveness probe while readiness remains available for dependency-aware orchestration.
