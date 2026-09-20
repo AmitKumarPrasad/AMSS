@@ -18,7 +18,6 @@ public class AiOrchestratorClient {
     private final String serviceToken;
 
     @Autowired
-    @Autowired
     public AiOrchestratorClient(RestClient.Builder builder, AiOrchestratorProperties properties) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(properties.connectTimeout())
