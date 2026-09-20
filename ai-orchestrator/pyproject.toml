@@ -10,6 +10,9 @@ dependencies = [
   "langchain-core>=0.3,<1.0",
 ]
 
+[tool.setuptools]
+py-modules = ["agent"]
+
 [build-system]
 requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"

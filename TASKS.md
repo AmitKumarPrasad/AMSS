@@ -26,7 +26,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Add/strengthen service-layer tests for state transitions.
 - [x] Add consistent API error handling.
 - [x] Review database migration coverage.
-- [ ] Review AI orchestrator configuration and secret handling.
+- [x] Review AI orchestrator configuration and secret handling.
 - [ ] Add health/readiness checks where missing.
 - [ ] Review Docker configuration for production safety.
 
@@ -40,6 +40,12 @@ This file is the implementation source of truth for the next development batches
 - Request DTOs use Bean Validation; audited free-form fields have bounded lengths and staff email uses email validation.
 - AI question inputs are bounded to prevent oversized requests.
 - Controller audit did not identify an unprotected tenant endpoint in the reviewed backend paths.
+
+### AI orchestrator secret/configuration hardening
+- AI orchestrator now fails closed when `OPENAI_API_KEY` is missing.
+- MCP URL validation requires HTTP(S); non-local HTTP requires explicit opt-in.
+- Added `.env.example` and repository ignore rules so local secrets are not committed.
+- Added Python configuration regression tests.
 
 ### Database migration coverage
 - Flyway integration test now requires all 16 versioned migrations to apply successfully.
