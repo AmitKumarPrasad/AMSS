@@ -21,8 +21,11 @@ import java.util.UUID;
 @Service
 public class RagService {
     private static final List<String> ALL_ROLES = List.of("PUBLIC", "SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT", "PARENT", "STUDENT");
+    private static final List<String> SUPPORTED_ROLES = List.of("SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT", "PARENT", "STUDENT");
     private static final int CHUNK_SIZE = 1800;
     private static final int CHUNK_OVERLAP = 250;
+    private static final int MAX_QUERY_LENGTH = 2000;
+    private static final int MAX_TOP_K = 20;
 
     private final VectorStore vectorStore;
     private final DocumentRepository documentRepository;
@@ -44,6 +47,7 @@ public class RagService {
         }
 
         String audience = DocumentAudience.normalize(document.getAudienceRole());
+        validateAudience(audience);
         List<String> chunks = chunk(content.trim());
         List<org.springframework.ai.document.Document> vectors = new ArrayList<>(chunks.size());
         for (int i = 0; i < chunks.size(); i++) {
@@ -75,40 +79,35 @@ public class RagService {
         if (question == null || question.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "question is required");
         }
-        List<String> allowedRoles = roles == null ? List.of() : roles.stream()
-                .map(value -> value == null ? "" : value.replace("ROLE_", "").trim().toUpperCase(Locale.ROOT))
-                .filter(value -> !value.isBlank())
-                .distinct()
-                .toList();
-        if (allowedRoles.isEmpty()) allowedRoles = List.of("PUBLIC");
-        else if (allowedRoles.contains("SUPER_ADMIN")) allowedRoles = ALL_ROLES;
-        else {
-            List<String> rolesWithPublic = new ArrayList<>(allowedRoles);
-            if (!rolesWithPublic.contains("PUBLIC")) rolesWithPublic.add("PUBLIC");
-            allowedRoles = List.copyOf(rolesWithPublic);
+        String normalizedQuestion = question.trim();
+        if (normalizedQuestion.length() > MAX_QUERY_LENGTH) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "question must not exceed 2000 characters");
         }
 
+        List<String> allowedRoles = normalizeRoles(roles);
         String audienceFilter = allowedRoles.stream()
                 .map(value -> "'" + escape(value) + "'")
                 .reduce((left, right) -> left + "," + right)
                 .orElse("'PUBLIC'");
         String filter = "school_id == '" + escape(schoolId.toString()) + "' && audience_role in [" + audienceFilter + "]";
+
         List<org.springframework.ai.document.Document> matches = vectorStore.similaritySearch(SearchRequest.builder()
-                        .query(question.trim())
-                        .topK(Math.max(1, Math.min(topK, 20)))
-                        .similarityThresholdAll()
-                        .filterExpression(filter)
-                        .build());
+                .query(normalizedQuestion)
+                .topK(Math.max(1, Math.min(topK, MAX_TOP_K)))
+                .similarityThresholdAll()
+                .filterExpression(filter)
+                .build());
 
         List<UUID> documentIds = matches.stream()
                 .map(document -> String.valueOf(document.getMetadata().getOrDefault("document_id", "")))
                 .map(this::parseUuid)
-                .flatMap(java.util.Optional::stream)
+                .flatMap(Optional::stream)
                 .distinct()
                 .toList();
         Map<UUID, Document> publishedDocuments = documentRepository.findAllById(documentIds).stream()
                 .filter(document -> schoolId.equals(document.getSchoolId()))
                 .filter(document -> "PUBLISHED".equals(document.getStatus()))
+                .filter(document -> isAllowedAudience(document.getAudienceRole(), allowedRoles))
                 .collect(java.util.stream.Collectors.toMap(Document::getId, document -> document));
 
         return matches.stream()
@@ -120,6 +119,36 @@ public class RagService {
                         String.valueOf(document.getMetadata().getOrDefault("source", "unknown")),
                         String.valueOf(document.getMetadata().getOrDefault("document_id", "unknown"))))
                 .toList();
+    }
+
+    private List<String> normalizeRoles(Collection<String> roles) {
+        List<String> normalized = roles == null ? List.of() : roles.stream()
+                .map(value -> value == null ? "" : value.replace("ROLE_", "").trim().toUpperCase(Locale.ROOT))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .toList();
+        if (normalized.isEmpty()) {
+            return List.of("PUBLIC");
+        }
+        if (normalized.stream().anyMatch(value -> !SUPPORTED_ROLES.contains(value))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "unsupported AI retrieval role");
+        }
+        if (normalized.contains("SUPER_ADMIN")) {
+            return ALL_ROLES;
+        }
+        List<String> rolesWithPublic = new ArrayList<>(normalized);
+        rolesWithPublic.add("PUBLIC");
+        return rolesWithPublic.stream().distinct().toList();
+    }
+
+    private boolean isAllowedAudience(String audienceRole, List<String> allowedRoles) {
+        return allowedRoles.contains(DocumentAudience.normalize(audienceRole));
+    }
+
+    private void validateAudience(String audience) {
+        if (!"PUBLIC".equals(audience) && !SUPPORTED_ROLES.contains(audience)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unsupported document audience role");
+        }
     }
 
     private List<String> chunk(String content) {
