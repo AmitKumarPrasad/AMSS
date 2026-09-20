@@ -59,6 +59,7 @@ This file is the implementation source of truth for the next development batches
   - Preserved school isolation and user ownership for every conversation/message operation.
 - [ ] Backend-wide pagination, filtering and API contract review.
   - [~] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
+  - [x] Added bounded pagination, status filtering and search to student and staff list APIs with deterministic ordering.
   - [ ] Review remaining unbounded list endpoints and response contracts.
 - [ ] Backend production integration/security verification.
 
