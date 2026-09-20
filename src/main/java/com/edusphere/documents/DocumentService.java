@@ -44,7 +44,7 @@ public class DocumentService {
         Document saved = repository.save(new Document(schoolId, title, trimNullable(request.description()), sanitizeFileName(fileName),
                 contentType, key, trimNullable(request.checksum()), normalizeAudience(request.audienceRole()), uploadedBy));
         auditService.record(schoolId, uploadedBy, "DOCUMENT_REGISTERED", "DOCUMENT", saved.getId(),
-                "{"title":"" + jsonEscape(saved.getTitle()) + "","storageKey":"" + jsonEscape(saved.getStorageKey()) + ""}");
+                "{\"title\":\"" + jsonEscape(saved.getTitle()) + "\",\"storageKey\":\"" + jsonEscape(saved.getStorageKey()) + "\"}");
         return toView(saved);
     }
 
@@ -139,7 +139,7 @@ public class DocumentService {
     }
     private String trimNullable(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private String requiredText(String value, String field) { if(value==null||value.isBlank()) bad(field+" is required"); return value.trim(); }
-    private String jsonEscape(String value) { return value.replace("\","\\").replace(""","\""); }
+    private String jsonEscape(String value) { return value.replace("\\", "\\\\").replace("\"", "\\\""); }
     private void bad(String message) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message); }
     private DocumentView toView(Document document) {
         return new DocumentView(document.getId(), document.getSchoolId(), document.getTitle(), document.getDescription(), document.getFileName(),
