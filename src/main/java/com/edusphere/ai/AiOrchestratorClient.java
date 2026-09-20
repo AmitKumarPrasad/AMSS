@@ -1,6 +1,7 @@
 package com.edusphere.ai;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class AiOrchestratorClient {
     private final RestClient client;
 
+    @Autowired
     @Autowired
     public AiOrchestratorClient(RestClient.Builder builder, AiOrchestratorProperties properties) {
         HttpClient httpClient = HttpClient.newBuilder()
