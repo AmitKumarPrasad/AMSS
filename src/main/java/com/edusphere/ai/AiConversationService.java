@@ -19,6 +19,7 @@ public class AiConversationService {
     public static final int MAX_MESSAGE = 2000;
     public static final int MAX_HISTORY = 12;
     private static final int MAX_CONVERSATIONS = 50;
+    private static final int MAX_MESSAGES = 100;
 
     private final JdbcTemplate jdbc;
 
@@ -83,6 +84,42 @@ public class AiConversationService {
                         rs.getString("content"),
                         rs.getObject("created_at", OffsetDateTime.class)), conversationId, schoolId, userId);
         return new ConversationView(base.id(), base.title(), base.createdAt(), base.updatedAt(), messages);
+    }
+
+    public List<MessageView> messages(UUID schoolId, UUID userId, UUID conversationId, int limit) {
+        if (limit < 1 || limit > MAX_MESSAGES) {
+            throw new ResponseStatusException(BAD_REQUEST, "limit must be between 1 and 100");
+        }
+        ensureOwned(schoolId, userId, conversationId);
+        return jdbc.query("""
+                SELECT id, role, content, created_at
+                FROM (
+                    SELECT id, role, content, created_at
+                    FROM ai_conversation_messages
+                    WHERE conversation_id = ? AND school_id = ? AND user_id = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                ) recent
+                ORDER BY created_at ASC
+                """, (rs, row) -> new MessageView(
+                        rs.getObject("id", UUID.class),
+                        rs.getString("role"),
+                        rs.getString("content"),
+                        rs.getObject("created_at", OffsetDateTime.class)), conversationId, schoolId, userId, limit);
+    }
+
+    @Transactional
+    public ConversationView rename(UUID schoolId, UUID userId, UUID conversationId, String title) {
+        String safeTitle = title == null || title.isBlank() ? "New conversation" : title.trim();
+        if (safeTitle.length() > MAX_TITLE) {
+            throw new ResponseStatusException(BAD_REQUEST, "title must not exceed 200 characters");
+        }
+        ensureOwned(schoolId, userId, conversationId);
+        jdbc.update("""
+                UPDATE ai_conversations SET title = ?, updated_at = now()
+                WHERE id = ? AND school_id = ? AND user_id = ?
+                """, safeTitle, conversationId, schoolId, userId);
+        return get(schoolId, userId, conversationId);
     }
 
     public List<HistoryMessage> history(UUID schoolId, UUID userId, UUID conversationId) {
