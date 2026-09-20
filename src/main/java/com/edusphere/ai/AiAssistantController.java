@@ -85,8 +85,7 @@ public class AiAssistantController {
                                 UUID.randomUUID(), schoolId, userId, roles, prompt, conversationId.toString()),
                         requestId == null || requestId.isBlank() ? UUID.randomUUID().toString() : requestId);
                 answer = response.answer();
-                conversations.append(schoolId, userId, conversationId, "USER", question);
-                conversations.append(schoolId, userId, conversationId, "ASSISTANT", answer == null ? "" : answer);
+                conversations.appendExchange(schoolId, userId, conversationId, question, answer == null ? "" : answer);
             }
 
             aiAuditService.record(schoolId, userId, requestId,
