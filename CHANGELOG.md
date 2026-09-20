@@ -6,6 +6,7 @@
 - Added Testcontainers PostgreSQL integration coverage for school-scoped students, invoices and payments.
 - Added duplicate payment-reference protection coverage.
 - Added JWT tenant-context coverage for same-school access and cross-school rejection through TenantAccess.
+- Added MockMvc coverage for unauthenticated, cross-tenant and unauthorized-role access to fee APIs.
 
 ### Operational runbooks
 - Added RUNBOOK.md for deployment, rollback, backup/restore and incident response.
