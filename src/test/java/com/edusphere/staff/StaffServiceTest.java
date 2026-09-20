@@ -57,4 +57,30 @@ class StaffServiceTest {
                 new StaffService.CreateLeaveRequest(" sick ", LocalDate.now(), LocalDate.now().plusDays(2), null)));
         verify(leaveRepository, never()).save(any());
     }
+
+    @Test void changeStatusDeactivatesStaff() {
+        UUID school = UUID.randomUUID(), staffId = UUID.randomUUID();
+        StaffMember staff = new StaffMember(school, "E2", "Bob", null, null, "Teacher", "FULL_TIME", null);
+        StaffService service = new StaffService(staffRepository, leaveRepository);
+        when(staffRepository.findById(staffId)).thenReturn(Optional.of(staff));
+        when(staffRepository.save(any(StaffMember.class))).thenAnswer(i -> i.getArgument(0));
+
+        StaffService.StaffView view = service.changeStatus(school, staffId, false);
+
+        assertEquals("INACTIVE", view.status());
+        verify(staffRepository).save(staff);
+    }
+
+    @Test void changeStatusRejectsCrossTenantStaff() {
+        UUID school = UUID.randomUUID(), otherSchool = UUID.randomUUID(), staffId = UUID.randomUUID();
+        StaffMember staff = new StaffMember(otherSchool, "E3", "Carol", null, null, "Teacher", "FULL_TIME", null);
+        StaffService service = new StaffService(staffRepository, leaveRepository);
+        when(staffRepository.findById(staffId)).thenReturn(Optional.of(staff));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.changeStatus(school, staffId, false));
+
+        assertEquals(404, ex.getStatusCode().value());
+        verify(staffRepository, never()).save(any());
+    }
 }
