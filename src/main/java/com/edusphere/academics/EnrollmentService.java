@@ -2,16 +2,20 @@ package com.edusphere.academics;
 
 import com.edusphere.student.Student;
 import com.edusphere.student.StudentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class EnrollmentService {
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final SectionRepository sectionRepository;
@@ -72,15 +76,25 @@ public class EnrollmentService {
     }
 
     @Transactional(readOnly = true)
-    public List<EnrollmentView> listBySection(UUID schoolId, UUID sectionId) {
+    public Page<EnrollmentView> listBySection(UUID schoolId, UUID sectionId, int page, int size) {
         requireSection(schoolId, sectionId);
-        return enrollmentRepository.findBySectionIdAndStatusOrderByEnrolledOnDesc(sectionId, "ACTIVE").stream().map(this::toView).toList();
+        return enrollmentRepository
+                .findBySectionIdAndStatusOrderByEnrolledOnDesc(sectionId, "ACTIVE", pageRequest(page, size))
+                .map(this::toView);
     }
 
     @Transactional(readOnly = true)
-    public List<EnrollmentView> listByStudent(UUID schoolId, UUID studentId) {
+    public Page<EnrollmentView> listByStudent(UUID schoolId, UUID studentId, int page, int size) {
         requireStudent(schoolId, studentId);
-        return enrollmentRepository.findByStudentIdAndStatusOrderByEnrolledOnDesc(studentId, "ACTIVE").stream().map(this::toView).toList();
+        return enrollmentRepository
+                .findByStudentIdAndStatusOrderByEnrolledOnDesc(studentId, "ACTIVE", pageRequest(page, size))
+                .map(this::toView);
+    }
+
+    private PageRequest pageRequest(int page, int size) {
+        if (page < 0) bad("page must be >= 0");
+        if (size < 1 || size > MAX_PAGE_SIZE) bad("size must be between 1 and " + MAX_PAGE_SIZE);
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "enrolledOn").and(Sort.by(Sort.Direction.ASC, "id")));
     }
 
     private Section requireSection(UUID schoolId, UUID sectionId) {
