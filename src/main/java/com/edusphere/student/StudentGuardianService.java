@@ -1,5 +1,8 @@
 package com.edusphere.student;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,10 +51,12 @@ public class StudentGuardianService {
     }
 
     @Transactional(readOnly = true)
-    public List<GuardianView> list(UUID schoolId, UUID studentId) {
+    public Page<GuardianView> list(UUID schoolId, UUID studentId, int page, int size) {
         requireStudent(schoolId, studentId);
-        return repository.findByStudentIdAndStatusOrderByPrimaryContactDescFullNameAsc(studentId, "ACTIVE")
-                .stream().map(this::view).toList();
+        if (page < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be >= 0");
+        if (size < 1 || size > 100) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "size must be between 1 and 100");
+        PageRequest request = PageRequest.of(page, size, Sort.by(Sort.Order.desc("primaryContact"), Sort.Order.asc("fullName"), Sort.Order.asc("id")));
+        return repository.findByStudentIdAndStatus(studentId, "ACTIVE", request).map(this::view);
     }
 
     private void requireStudent(UUID schoolId, UUID studentId) {
