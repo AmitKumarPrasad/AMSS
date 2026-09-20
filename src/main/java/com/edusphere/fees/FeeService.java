@@ -17,7 +17,6 @@ import java.util.UUID;
 @Service
 public class FeeService {
     private static final int MAX_PAGE_SIZE = 100;
-    private static final int MAX_PAYMENT_LIST_SIZE = 100;
 
     private final FeeInvoiceRepository invoiceRepository;
     private final FeePaymentRepository paymentRepository;
@@ -95,17 +94,15 @@ public class FeeService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentView> listPayments(UUID schoolId, UUID invoiceId, int limit) {
-        if (limit < 1 || limit > MAX_PAYMENT_LIST_SIZE) {
-            bad("limit must be between 1 and " + MAX_PAYMENT_LIST_SIZE);
-        }
+    public Page<PaymentView> listPayments(UUID schoolId, UUID invoiceId, int page, int size) {
+        if (page < 0) bad("page must be zero or greater");
+        if (size < 1 || size > MAX_PAGE_SIZE) bad("size must be between 1 and " + MAX_PAGE_SIZE);
         FeeInvoice invoice = invoiceRepository.findById(invoiceId)
                 .filter(i -> schoolId.equals(i.getSchoolId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found"));
-        return paymentRepository.findByInvoiceIdOrderByPaidAtDesc(invoice.getId()).stream()
-                .limit(limit)
-                .map(this::toView)
-                .toList();
+        PageRequest request = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "paidAt").and(Sort.by(Sort.Direction.ASC, "id")));
+        return paymentRepository.findByInvoiceId(invoice.getId(), request).map(this::toView);
     }
 
     private void requireStudent(UUID schoolId, UUID studentId) {
