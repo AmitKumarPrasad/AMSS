@@ -14,6 +14,17 @@ spec:
     - port: 8080
       targetPort: 8080
 ---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app
+  namespace: edusphere
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: edusphere
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,18 +56,26 @@ spec:
                 name: edusphere-config
             - secretRef:
                 name: edusphere-secrets
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 40
             periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             requests:
               cpu: 250m
