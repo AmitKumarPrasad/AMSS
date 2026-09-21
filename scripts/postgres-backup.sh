@@ -1,5 +1,5 @@
 #!/bin/sh
-set -euo pipefail
+set -eu
 
 : "${PGHOST:?PGHOST is required}"
 : "${PGPORT:=5432}"
