@@ -21,6 +21,15 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - name: Build production container
         run: docker build --tag amss:ci .
+      - name: Validate production image hardening
+        run: |
+          image_user=$(docker image inspect amss:ci --format '{{.Config.User}}')
+          test "$image_user" = "10001" || { echo "Expected image user 10001, got: $image_user"; exit 1; }
+          healthcheck=$(docker image inspect amss:ci --format '{{json .Config.Healthcheck}}')
+          echo "Image user: $image_user"
+          echo "Image healthcheck: $healthcheck"
+          echo "$healthcheck" | grep -F '/actuator/health/liveness' >/dev/null || { echo "Liveness healthcheck missing from image"; exit 1; }
+          echo "Production image hardening contract validated."
       - name: Validate launch compose
         run: docker compose config
         env:
