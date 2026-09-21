@@ -105,5 +105,11 @@ This file is the implementation source of truth for the next development batches
   - [x] Document the deployment baseline and required secrets.
   - [x] PR #53 merged after CI Run #499 completed successfully.
 
+- [ ] Add production observability baseline.
+  - [ ] Expose Prometheus metrics through the internal application service.
+  - [ ] Add Kubernetes Prometheus scrape metadata for the application service.
+  - [ ] Require CI smoke tests to validate the Prometheus endpoint and representative JVM metrics.
+  - [ ] Mark complete only after the PR CI run is green and merged.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
