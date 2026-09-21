@@ -61,7 +61,7 @@ This file is the implementation source of truth for the next development batches
   - [x] Corrected audience-aware pagination for documents and announcements so inaccessible rows no longer consume a page.
   - [x] Added bounded pagination, status filtering and search to student and staff list APIs with deterministic ordering.
   - [x] Added bounded pagination/status filtering to academic-year lists, pagination to class lists, and pagination/search to subject lists with deterministic ordering.
-  - [x] Added bounded pagination, status filtering and search to section list APIs with deterministic ordering.
+  - [x] Added bounded pagination and status filtering to section list APIs with deterministic ordering.
   - [x] Added bounded pagination and status filtering to staff leave lists with deterministic ordering.
   - [x] Added bounded pagination to assessment list APIs with deterministic assessment-date ordering.
   - [x] Added bounded pagination to enrollment-by-section and enrollment-by-student APIs with deterministic ordering.
@@ -116,6 +116,13 @@ This file is the implementation source of truth for the next development batches
   - [x] Document production backup, retention, encryption and restore requirements.
   - [x] Require CI to execute a real backup/drop/restore verification against PostgreSQL 17.
   - [x] PR #55 merged after CI Run #512 completed successfully after fixing the PostgreSQL CI password/environment contract.
+
+- [ ] Add Kubernetes workload availability and health-probe hardening baseline.
+  - [ ] Add an application PodDisruptionBudget so voluntary disruptions retain service capacity.
+  - [ ] Add startup probes to prevent premature liveness failures during application startup.
+  - [ ] Add liveness probes for PostgreSQL and Redis.
+  - [ ] Require CI Kustomize validation to verify the new availability and probe contracts.
+  - [ ] Mark complete only after the PR CI run is green and merged.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
