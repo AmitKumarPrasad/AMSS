@@ -116,6 +116,10 @@ This file is the implementation source of truth for the next development batches
   - [x] Add liveness probes for PostgreSQL and Redis.
   - [x] Require CI Kustomize validation to verify the new availability and probe contracts.
   - [x] PR #56 merged after CI Run #518 completed successfully after fixing the rendered Redis probe validation contract.
+- [x] Close the backend implementation roadmap and define the frontend transition boundary.
+  - [x] Document repository-level backend release readiness and environment-specific launch requirements in `docs/RELEASE_READINESS.md`.
+  - [x] Require CI to validate the release-readiness document and frontend transition boundary.
+  - [x] Confirm the backend roadmap is complete and frontend work can begin against the stabilized REST/OpenAPI contracts.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
