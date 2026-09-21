@@ -84,5 +84,9 @@ This file is the implementation source of truth for the next development batches
   - [x] Verify API metadata and critical authentication/AI endpoints are present.
   - [x] PR #49 merged after CI Run #483 completed successfully.
 
+- [ ] Add production smoke-test authentication contract validation.
+  - [ ] Verify protected API endpoints reject unauthenticated requests.
+  - [ ] Verify login input validation rejects malformed credentials.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.

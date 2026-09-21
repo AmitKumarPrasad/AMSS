@@ -38,6 +38,13 @@ jobs:
               echo "Readiness status (informational):"
               curl --silent --show-error http://localhost:8080/actuator/health/readiness || true
               echo
+              echo "Validating authentication contract..."
+              protected_status=$(curl --silent --output /tmp/protected.json --write-out "%{http_code}" http://localhost:8080/api/v1/schools/00000000-0000-0000-0000-000000000001/ai/conversations)
+              test "$protected_status" = "401" || { echo "Expected protected endpoint HTTP 401, got $protected_status"; cat /tmp/protected.json; exit 1; }
+              login_status=$(curl --silent --output /tmp/login.json --write-out "%{http_code}" -H "Content-Type: application/json" -d '{"username":"","password":""}' http://localhost:8080/api/v1/auth/login)
+              test "$login_status" = "400" || { echo "Expected invalid login HTTP 400, got $login_status"; cat /tmp/login.json; exit 1; }
+              echo "Authentication contract validated: protected API returns 401 and malformed login returns 400."
+
               echo "Validating OpenAPI contract..."
               curl --fail --silent http://localhost:8080/v3/api-docs > /tmp/openapi.json
               python - <<'PY'
