@@ -3,6 +3,8 @@ package com.edusphere.fees;
 import com.edusphere.security.TenantAccess;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(FeeController.class)
 @Import(FeeControllerIntegrationTest.TestSecurityConfig.class)
+@ImportAutoConfiguration(SecurityAutoConfiguration.class)
 class FeeControllerIntegrationTest {
     @Autowired MockMvc mvc;
     @MockitoBean FeeService feeService;
