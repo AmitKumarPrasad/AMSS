@@ -99,5 +99,10 @@ This file is the implementation source of truth for the next development batches
   - [x] Verify the image contains a liveness healthcheck.
   - [x] PR #52 merged after CI Run #492 completed successfully.
 
+- [ ] Add production deployment readiness baseline.
+  - [ ] Add Kubernetes manifests for the application, PostgreSQL, and Redis connectivity configuration.
+  - [ ] Add deployment validation to CI by rendering and syntax-validating the Kubernetes manifests with Kustomize.
+  - [ ] Document the deployment baseline and required secrets.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.

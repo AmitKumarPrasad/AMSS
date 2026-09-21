@@ -19,6 +19,14 @@ jobs:
         run: mvn -B test package
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Validate Kubernetes deployment manifests
+        run: |
+          kubectl kustomize k8s > /tmp/amss-k8s.yaml
+          test -s /tmp/amss-k8s.yaml
+          grep -F 'kind: Deployment' /tmp/amss-k8s.yaml >/dev/null
+          grep -F 'kind: StatefulSet' /tmp/amss-k8s.yaml >/dev/null
+          grep -F 'kind: Service' /tmp/amss-k8s.yaml >/dev/null
+          echo "Kubernetes deployment manifests rendered and syntax-validated by kustomize."
       - name: Build production container
         run: docker build --tag amss:ci .
       - name: Validate production image hardening

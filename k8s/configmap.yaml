@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edusphere-config
+  namespace: edusphere
+data:
+  SPRING_PROFILES_ACTIVE: prod
+  SPRING_AI_MCP_SERVER_ENABLED: "false"
+  DB_URL: jdbc:postgresql://postgres:5432/edusphere
+  DB_USERNAME: edusphere
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  DOCUMENT_STORAGE_PROVIDER: local
+  DOCUMENT_STORAGE_ROOT: /app/data/documents
+  NOTIFICATIONS_EMAIL_ENABLED: "false"
+  NOTIFICATIONS_SMS_ENABLED: "false"
