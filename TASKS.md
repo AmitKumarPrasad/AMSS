@@ -94,5 +94,9 @@ This file is the implementation source of truth for the next development batches
   - [x] Keep authentication and OpenAPI contract checks in the same smoke gate.
   - [x] PR #51 merged after CI Run #489 completed successfully.
 
+- [ ] Add CI production-container hardening contract validation.
+  - [ ] Verify the built image runs as non-root UID 10001.
+  - [ ] Verify the image contains a liveness healthcheck.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
