@@ -79,6 +79,9 @@ This file is the implementation source of truth for the next development batches
   - [x] Restored `mvn -B test package` in GitHub Actions.
   - [x] Added Spring Boot 4 security test support and regression coverage for fee endpoint authentication, role authorization and tenant-boundary denial.
   - [x] Verified full Maven tests, production container build, compose validation and application smoke test in CI.
+- [x] Add CI OpenAPI contract regression validation.
+  - [x] Validate the generated OpenAPI document during the application smoke test.
+  - [x] Verify API metadata and critical authentication/AI endpoints are present.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
