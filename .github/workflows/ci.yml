@@ -29,6 +29,8 @@ jobs:
           grep -F 'kind: PodDisruptionBudget' /tmp/amss-k8s.yaml >/dev/null
           grep -F 'path: /actuator/health/readiness' /tmp/amss-k8s.yaml >/dev/null
           grep -F 'path: /actuator/health/liveness' /tmp/amss-k8s.yaml >/dev/null
+          grep -F 'failureThreshold: 30' /tmp/amss-k8s.yaml >/dev/null
+          grep -F 'initialDelaySeconds: 30' /tmp/amss-k8s.yaml >/dev/null
           grep -F 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' /tmp/amss-k8s.yaml >/dev/null
           grep -F 'command: ["redis-cli","ping"]' /tmp/amss-k8s.yaml >/dev/null
           grep -F 'prometheus.io/scrape: "true"' /tmp/amss-k8s.yaml >/dev/null
@@ -37,7 +39,11 @@ jobs:
           echo "Kubernetes deployment, availability, health-probe and observability contracts validated."
       - name: Validate PostgreSQL backup and restore tooling
         run: |
-          docker run -d --name amss-postgres-backup-test             -e POSTGRES_DB=edusphere             -e POSTGRES_USER=edusphere             -e POSTGRES_PASSWORD=edusphere             postgres:17-alpine
+          docker run -d --name amss-postgres-backup-test \
+            -e POSTGRES_DB=edusphere \
+            -e POSTGRES_USER=edusphere \
+            -e POSTGRES_PASSWORD=edusphere \
+            postgres:17-alpine
           cleanup() { docker rm -f amss-postgres-backup-test >/dev/null 2>&1 || true; }
           trap cleanup EXIT
           for attempt in {1..30}; do
