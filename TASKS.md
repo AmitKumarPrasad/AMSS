@@ -83,46 +83,39 @@ This file is the implementation source of truth for the next development batches
   - [x] Validate the generated OpenAPI document during the application smoke test.
   - [x] Verify API metadata and critical authentication/AI endpoints are present.
   - [x] PR #49 merged after CI Run #483 completed successfully.
-
 - [x] Add production smoke-test authentication contract validation.
   - [x] Verify protected API endpoints reject unauthenticated requests.
   - [x] Verify login input validation rejects malformed credentials.
   - [x] PR #50 merged after CI Run #486 completed successfully.
-
 - [x] Make production smoke-test readiness a required CI gate.
   - [x] Require `/actuator/health/readiness` to return HTTP 200.
   - [x] Keep authentication and OpenAPI contract checks in the same smoke gate.
   - [x] PR #51 merged after CI Run #489 completed successfully.
-
 - [x] Add CI production-container hardening contract validation.
   - [x] Verify the built image runs as non-root UID 10001.
   - [x] Verify the image contains a liveness healthcheck.
   - [x] PR #52 merged after CI Run #492 completed successfully.
-
 - [x] Add production deployment readiness baseline.
   - [x] Add Kubernetes manifests for the application, PostgreSQL, and Redis connectivity configuration.
   - [x] Add deployment validation to CI by rendering and syntax-validating the Kubernetes manifests with Kustomize.
   - [x] Document the deployment baseline and required secrets.
   - [x] PR #53 merged after CI Run #499 completed successfully.
-
 - [x] Add production observability baseline.
   - [x] Add Micrometer Prometheus registry and expose Prometheus metrics through the internal application service.
   - [x] Add Kubernetes Prometheus scrape metadata for the application service.
   - [x] Require CI smoke tests to validate the Prometheus endpoint and representative JVM metrics.
   - [x] PR #54 merged after CI Run #503 completed successfully after fixing the missing Prometheus registry dependency.
-
 - [x] Add PostgreSQL backup and restore validation baseline.
   - [x] Add reusable custom-format backup and restore scripts.
   - [x] Document production backup, retention, encryption and restore requirements.
   - [x] Require CI to execute a real backup/drop/restore verification against PostgreSQL 17.
   - [x] PR #55 merged after CI Run #512 completed successfully after fixing the PostgreSQL CI password/environment contract.
-
-- [ ] Add Kubernetes workload availability and health-probe hardening baseline.
-  - [ ] Add an application PodDisruptionBudget so voluntary disruptions retain service capacity.
-  - [ ] Add startup probes to prevent premature liveness failures during application startup.
-  - [ ] Add liveness probes for PostgreSQL and Redis.
-  - [ ] Require CI Kustomize validation to verify the new availability and probe contracts.
-  - [ ] Mark complete only after the PR CI run is green and merged.
+- [x] Add Kubernetes workload availability and health-probe hardening baseline.
+  - [x] Add an application PodDisruptionBudget so voluntary disruptions retain service capacity.
+  - [x] Add startup probes to prevent premature liveness failures during application startup.
+  - [x] Add liveness probes for PostgreSQL and Redis.
+  - [x] Require CI Kustomize validation to verify the new availability and probe contracts.
+  - [x] PR #56 merged after CI Run #518 completed successfully after fixing the rendered Redis probe validation contract.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
