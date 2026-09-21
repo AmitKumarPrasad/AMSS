@@ -44,8 +44,9 @@ jobs:
           missing = [value for value in required if value not in text]
           assert not missing, f"Missing Kubernetes contract fragments: {missing}"
 
-          normalized = "".join(text.split())
-          assert "command:[\"redis-cli\",\"ping\"]" in normalized, "Redis liveness command missing"
+          redis_commands = [line.strip() for line in text.splitlines() if line.strip() == "- redis-cli"]
+          redis_pings = [line.strip() for line in text.splitlines() if line.strip() == "- ping"]
+          assert len(redis_commands) >= 2 and len(redis_pings) >= 2, "Redis readiness/liveness commands missing"
           print("Kubernetes deployment, availability, health-probe and observability contracts validated.")
           PY
       - name: Validate PostgreSQL backup and restore tooling
