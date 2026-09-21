@@ -30,6 +30,28 @@ jobs:
           grep -F 'prometheus.io/path: /actuator/prometheus' /tmp/amss-k8s.yaml >/dev/null
           grep -F 'prometheus.io/port: "8080"' /tmp/amss-k8s.yaml >/dev/null
           echo "Kubernetes deployment manifests rendered and observability metadata validated."
+      - name: Validate PostgreSQL backup and restore tooling
+        run: |
+          docker run -d --name amss-postgres-backup-test \
+            -e POSTGRES_DB=edusphere \
+            -e POSTGRES_USER=edusphere \
+            -e POSTGRES_PASSWORD=edusphere \
+            postgres:17-alpine
+          cleanup() { docker rm -f amss-postgres-backup-test >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for attempt in {1..30}; do
+            if docker exec amss-postgres-backup-test pg_isready -U edusphere -d edusphere >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          docker exec amss-postgres-backup-test psql -U edusphere -d edusphere -v ON_ERROR_STOP=1 -c "CREATE TABLE backup_contract_test (id integer PRIMARY KEY, value text NOT NULL); INSERT INTO backup_contract_test VALUES (1, 'restorable');"
+          docker cp scripts/postgres-backup.sh amss-postgres-backup-test:/tmp/postgres-backup.sh
+          docker cp scripts/postgres-restore.sh amss-postgres-backup-test:/tmp/postgres-restore.sh
+          docker exec -e PGHOST=localhost -e PGPORT=5432 -e PGUSER=edusphere -e PGDATABASE=edusphere -e PGPASSWORD=edusphere amss-postgres-backup-test sh /tmp/postgres-backup.sh /tmp/edusphere.dump
+          docker exec amss-postgres-backup-test psql -U edusphere -d edusphere -v ON_ERROR_STOP=1 -c "DROP TABLE backup_contract_test;"
+          docker exec -e PGHOST=localhost -e PGPORT=5432 -e PGUSER=edusphere -e PGDATABASE=edusphere -e PGPASSWORD=edusphere amss-postgres-backup-test sh /tmp/postgres-restore.sh /tmp/edusphere.dump
+          restored=$(docker exec amss-postgres-backup-test psql -U edusphere -d edusphere -tAc "SELECT value FROM backup_contract_test WHERE id=1;")
+          test "$restored" = "restorable" || { echo "Backup restore verification failed: $restored"; exit 1; }
+          echo "PostgreSQL backup/restore contract validated successfully."
       - name: Build production container
         run: docker build --tag amss:ci .
       - name: Validate production image hardening
