@@ -101,7 +101,7 @@ This file is the implementation source of truth for the next development batches
 
 - [ ] Add production deployment readiness baseline.
   - [ ] Add Kubernetes manifests for the application, PostgreSQL, and Redis connectivity configuration.
-  - [ ] Add deployment validation to CI using Kubernetes client-side dry-run/schema validation.
+  - [ ] Add deployment validation to CI by rendering and syntax-validating the Kubernetes manifests with Kustomize.
   - [ ] Document the deployment baseline and required secrets.
 
 ## Working Rule
