@@ -82,6 +82,13 @@ jobs:
           echo "Image healthcheck: $healthcheck"
           echo "$healthcheck" | grep -F '/actuator/health/liveness' >/dev/null || { echo "Liveness healthcheck missing from image"; exit 1; }
           echo "Production image hardening contract validated."
+      - name: Validate release readiness documentation
+        run: |
+          test -s docs/RELEASE_READINESS.md
+          grep -F '## Repository readiness' docs/RELEASE_READINESS.md >/dev/null
+          grep -F '## Environment-specific launch checklist' docs/RELEASE_READINESS.md >/dev/null
+          grep -F '## Frontend transition' docs/RELEASE_READINESS.md >/dev/null
+          echo "Backend release-readiness boundary documented and validated."
       - name: Validate launch compose
         run: docker compose config
         env:
