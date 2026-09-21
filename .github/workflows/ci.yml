@@ -38,6 +38,26 @@ jobs:
               echo "Readiness status (informational):"
               curl --silent --show-error http://localhost:8080/actuator/health/readiness || true
               echo
+              echo "Validating OpenAPI contract..."
+              curl --fail --silent http://localhost:8080/v3/api-docs > /tmp/openapi.json
+              python - <<'PY'
+          import json
+          from pathlib import Path
+
+          document = json.loads(Path("/tmp/openapi.json").read_text())
+          assert document.get("openapi"), "OpenAPI version is missing"
+          assert document.get("info", {}).get("title") == "EduSphere / AMSS API", "Unexpected OpenAPI title"
+          assert document.get("info", {}).get("version") == "v1", "Unexpected OpenAPI version"
+          paths = document.get("paths", {})
+          required = {
+              "/api/v1/auth/login",
+              "/api/v1/schools/{schoolId}/ai/ask",
+              "/api/v1/schools/{schoolId}/ai/conversations",
+          }
+          missing = sorted(required - paths.keys())
+          assert not missing, f"Required API paths missing: {missing}"
+          print(f"OpenAPI contract validated: {len(paths)} paths exposed.")
+          PY
               exit 0
             fi
             if (( attempt % 10 == 0 )); then
