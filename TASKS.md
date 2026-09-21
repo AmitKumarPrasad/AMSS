@@ -111,5 +111,11 @@ This file is the implementation source of truth for the next development batches
   - [x] Require CI smoke tests to validate the Prometheus endpoint and representative JVM metrics.
   - [x] PR #54 merged after CI Run #503 completed successfully after fixing the missing Prometheus registry dependency.
 
+- [ ] Add PostgreSQL backup and restore validation baseline.
+  - [ ] Add reusable custom-format backup and restore scripts.
+  - [ ] Document production backup, retention, encryption and restore requirements.
+  - [ ] Require CI to execute a real backup/drop/restore verification against PostgreSQL 17.
+  - [ ] Mark complete only after the PR CI run is green and merged.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
