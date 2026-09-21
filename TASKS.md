@@ -89,9 +89,10 @@ This file is the implementation source of truth for the next development batches
   - [x] Verify login input validation rejects malformed credentials.
   - [x] PR #50 merged after CI Run #486 completed successfully.
 
-- [ ] Make production smoke-test readiness a required CI gate.
-  - [ ] Require `/actuator/health/readiness` to return HTTP 200.
-  - [ ] Keep authentication and OpenAPI contract checks in the same smoke gate.
+- [x] Make production smoke-test readiness a required CI gate.
+  - [x] Require `/actuator/health/readiness` to return HTTP 200.
+  - [x] Keep authentication and OpenAPI contract checks in the same smoke gate.
+  - [x] PR #51 merged after CI Run #489 completed successfully.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
