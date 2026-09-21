@@ -75,7 +75,10 @@ This file is the implementation source of truth for the next development batches
   - [x] Added JWT configuration regression coverage for strong secrets and HTTPS production issuers.
   - [x] Added fail-closed coverage for weak/default secrets, blank issuers and non-HTTPS production issuers.
   - [x] Verified backend compilation/tests, production container build, compose validation and application smoke test in CI.
-- [ ] Restore the full Maven test suite, including integration tests, as a required CI gate.
+- [x] Restore the full Maven test suite, including integration tests, as a required CI gate.
+  - [x] Restored `mvn -B test package` in GitHub Actions.
+  - [x] Added Spring Boot 4 security test support and regression coverage for fee endpoint authentication, role authorization and tenant-boundary denial.
+  - [x] Verified full Maven tests, production container build, compose validation and application smoke test in CI.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
