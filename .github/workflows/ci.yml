@@ -23,20 +23,31 @@ jobs:
         run: |
           kubectl kustomize k8s > /tmp/amss-k8s.yaml
           test -s /tmp/amss-k8s.yaml
-          grep -F 'kind: Deployment' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'kind: StatefulSet' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'kind: Service' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'kind: PodDisruptionBudget' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'path: /actuator/health/readiness' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'path: /actuator/health/liveness' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'failureThreshold: 30' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'initialDelaySeconds: 30' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'command: ["redis-cli","ping"]' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'prometheus.io/scrape: "true"' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'prometheus.io/path: /actuator/prometheus' /tmp/amss-k8s.yaml >/dev/null
-          grep -F 'prometheus.io/port: "8080"' /tmp/amss-k8s.yaml >/dev/null
-          echo "Kubernetes deployment, availability, health-probe and observability contracts validated."
+          python - <<'PY'
+          from pathlib import Path
+
+          text = Path("/tmp/amss-k8s.yaml").read_text()
+          required = [
+              "kind: Deployment",
+              "kind: StatefulSet",
+              "kind: Service",
+              "kind: PodDisruptionBudget",
+              "path: /actuator/health/readiness",
+              "path: /actuator/health/liveness",
+              "failureThreshold: 30",
+              "initialDelaySeconds: 30",
+              'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"',
+              "prometheus.io/scrape: \"true\"",
+              "prometheus.io/path: /actuator/prometheus",
+              "prometheus.io/port: \"8080\"",
+          ]
+          missing = [value for value in required if value not in text]
+          assert not missing, f"Missing Kubernetes contract fragments: {missing}"
+
+          normalized = "".join(text.split())
+          assert "command:[\"redis-cli\",\"ping\"]" in normalized, "Redis liveness command missing"
+          print("Kubernetes deployment, availability, health-probe and observability contracts validated.")
+          PY
       - name: Validate PostgreSQL backup and restore tooling
         run: |
           docker run -d --name amss-postgres-backup-test \
