@@ -27,7 +27,7 @@ Production-oriented school management platform built as a polyglot monorepo:
 
 ## Architecture
 
-```text
+~~~text
 Web / Mobile / Admin UI
           |
       API Gateway
@@ -41,7 +41,7 @@ Postgres Redis   MCP Server
            LangGraph AI
                 |
              LLM / RAG
-```
+~~~
 
 ## Development principles
 
@@ -65,35 +65,41 @@ Use `docker-compose.production.yml` as the deployment baseline for a single appl
 3. Set `JWT_ISSUER` to the public HTTPS issuer used by the API.
 4. Set `LANGGRAPH_BASE_URL` to the private AI-orchestrator endpoint.
 5. Build/tag the application image as `amss:production`.
-6. Start with:
-   `docker compose --env-file .env.production -f docker-compose.production.yml up -d`
+6. Start with `docker compose --env-file .env.production -f docker-compose.production.yml up -d`.
 7. Verify liveness and readiness before routing external traffic.
 8. Keep database backups and document storage backups outside the application container.
 
 See **RUNBOOK.md** for deployment, rollback, backup/restore and incident-response procedures.
 
-The production compose file is a baseline, not a substitute for a managed database, secret manager, TLS reverse proxy/load balancer, centralized logging, monitoring or disaster-recovery process.
+## Commercial distribution
+
+AMSS is now packaged for commercial source-code licensing.
+
+- **Standard:** $699
+- **Professional:** $999
+- **Business:** $1,499+
+- **Exclusive:** $3,000–$5,000+ negotiated
+
+See:
+- **COMMERCIAL_LICENSE.md** — commercial source-code license template
+- **SELLING_GUIDE.md** — pricing, buyer qualification and delivery process
+- **INSTALLATION.md** — customer setup and deployment guide
+- **MARKETPLACE_LISTING.md** — ready-to-use product listing copy
+- **SECURITY_RELEASE_CHECKLIST.md** — pre-delivery security checklist
+- **RUNBOOK.md** — operational deployment, backup, restore and incident response
+
+The main development repository should remain private. Deliver a tagged release or a separate customer repository according to the purchased license.
 
 ## Document storage
 
 Local filesystem remains the default for development:
 
-```text
+~~~text
 DOCUMENT_STORAGE_PROVIDER=local
 DOCUMENT_STORAGE_ROOT=./data/documents
-```
+~~~
 
-For multi-instance deployments, use S3 or an S3-compatible service such as MinIO:
-
-```text
-DOCUMENT_STORAGE_PROVIDER=s3
-DOCUMENT_S3_BUCKET=amss-documents
-DOCUMENT_S3_REGION=ap-south-1
-DOCUMENT_S3_PREFIX=documents/
-# Optional for MinIO or another S3-compatible endpoint:
-DOCUMENT_S3_ENDPOINT=http://minio:9000
-DOCUMENT_S3_PATH_STYLE_ACCESS=true
-```
+For multi-instance deployments, use S3 or an S3-compatible service such as MinIO.
 
 The AWS SDK default credential provider chain is used, so credentials should be supplied through the runtime environment, workload identity, or the platform's secret manager. Never commit access keys or secrets.
 
