@@ -19,13 +19,18 @@ jobs:
         run: mvn -B test package
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Stage marketplace coverage snapshot
+        run: |
+          mkdir -p coverage
+          cp target/site/jacoco/jacoco.xml coverage/jacoco.xml
+          cp target/site/jacoco/index.html coverage/index.html
       - name: Publish Java coverage evidence
         uses: actions/upload-artifact@v4
         with:
           name: java-coverage
           path: |
-            target/site/jacoco/jacoco.xml
-            target/site/jacoco/index.html
+            coverage/jacoco.xml
+            coverage/index.html
           if-no-files-found: error
       - name: Validate Kubernetes deployment manifests
         run: |
