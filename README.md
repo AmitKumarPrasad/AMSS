@@ -106,3 +106,10 @@ Core school-management bounded contexts, AI foundation, authenticated admin UI, 
 Set `OPENAI_API_KEY` in the runtime environment. Never commit secrets. Local development should use an ignored `.env`/`.env.local` or IDE environment configuration.
 
 Document uploads are limited by `MAX_FILE_SIZE` (default `25MB`) and `MAX_REQUEST_SIZE` (default `30MB`).
+
+
+## Documentation and marketplace distribution
+
+Developer and operational documentation is indexed in [docs/MARKETPLACE_QUALITY.md](docs/MARKETPLACE_QUALITY.md), including the clean source-package boundary, coverage evidence, third-party attribution guidance, and links to architecture, API, release-readiness, backup/restore and runbook documentation.
+
+Marketplace source archives should be created from tracked files with `git archive`; local SQLite/database files, generated build output, populated environment files, credentials and caches must not be included.
