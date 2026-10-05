@@ -19,6 +19,14 @@ jobs:
         run: mvn -B test package
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      - name: Publish Java coverage evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-coverage
+          path: |
+            target/site/jacoco/jacoco.xml
+            target/site/jacoco/index.html
+          if-no-files-found: error
       - name: Validate Kubernetes deployment manifests
         run: |
           kubectl kustomize k8s > /tmp/amss-k8s.yaml
