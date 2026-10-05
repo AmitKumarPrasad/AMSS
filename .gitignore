@@ -5,3 +5,10 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+
+# Local databases and generated coverage artifacts must not be shipped in marketplace source bundles.
+*.sqlite
+*.sqlite3
+*.db
+target/
+coverage/
