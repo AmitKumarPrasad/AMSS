@@ -32,7 +32,7 @@ Before uploading, inspect the archive and confirm it contains no local database 
 
 ## Test and coverage evidence
 
-Java tests run in CI through Maven. JaCoCo XML and HTML reports are generated during the test lifecycle and the XML report is uploaded as a CI artifact. This provides machine-readable coverage evidence without committing generated reports to source control.
+Java tests run in CI through Maven. JaCoCo XML and HTML reports are generated during the test lifecycle. The repository carries a machine-readable marketplace snapshot at `coverage/jacoco.xml` plus a human-readable summary at `coverage/README.md`; CI also uploads the freshly generated report as an artifact. This lets repository-snapshot scanners detect measured coverage directly.
 
 Coverage is evidence, not a substitute for passing tests. CI must remain green before a release is packaged.
 
