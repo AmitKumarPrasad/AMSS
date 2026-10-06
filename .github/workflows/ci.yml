@@ -135,6 +135,17 @@ jobs:
               test "$login_status" = "400" || { echo "Expected invalid login HTTP 400, got $login_status"; cat /tmp/login.json; exit 1; }
               echo "Authentication contract validated: protected API returns 401 and malformed login returns 400."
 
+              echo "Validating seeded demo login..."
+              demo_status=$(curl --silent --output /tmp/demo-login.json --write-out "%{http_code}" -H "Content-Type: application/json" -d '{"username":"demo-admin","password":"ci-demo-password-123"}' http://localhost:8080/api/v1/auth/login)
+              test "$demo_status" = "200" || { echo "Expected demo login HTTP 200, got $demo_status"; cat /tmp/demo-login.json; exit 1; }
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path("/tmp/demo-login.json").read_text())
+          assert payload.get("accessToken"), "Demo login did not return accessToken"
+          print("Demo login contract validated.")
+          PY
+
               echo "Validating OpenAPI contract..."
               curl --fail --silent http://localhost:8080/v3/api-docs > /tmp/openapi.json
               python - <<'PY'
@@ -181,6 +192,9 @@ jobs:
           SPRING_PROFILES_ACTIVE: prod
           SPRING_AI_MCP_SERVER_ENABLED: "false"
           NOTIFICATIONS_EMAIL_ENABLED: "false"
+          APP_DEMO_ENABLED: "true"
+          APP_DEMO_USERNAME: demo-admin
+          APP_DEMO_PASSWORD: ci-demo-password-123
 
   python:
     runs-on: ubuntu-latest
