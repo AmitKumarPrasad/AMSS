@@ -125,7 +125,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Add configurable frontend CORS support.
 - [x] Containerize the AI orchestrator and include it in local Docker Compose.
 - [x] Add local environment template and startup documentation.
-- [ ] Verify backend + AI stack CI and runtime health.
+- [x] Verify backend + AI stack CI and runtime health.
 - [x] Add opt-in demo school/admin/student bootstrap for local testing.
 - [ ] Verify frontend-to-backend end-to-end workflows with demo data.
 
