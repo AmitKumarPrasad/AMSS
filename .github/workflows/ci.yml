@@ -118,7 +118,13 @@ jobs:
               echo "Application HTTP server is live."
               cat /tmp/liveness.json
               echo "Validating readiness contract..."
-              curl --fail --silent http://localhost:8080/actuator/health/readiness > /tmp/readiness.json
+              readiness_status=$(curl --silent --output /tmp/readiness.json --write-out "%{http_code}" http://localhost:8080/actuator/health/readiness || true)
+              if [ "$readiness_status" != "200" ]; then
+                echo "Application is live but not ready yet (HTTP $readiness_status); continuing startup wait."
+                cat /tmp/readiness.json || true
+                sleep 2
+                continue
+              fi
               cat /tmp/readiness.json
               echo "Readiness contract validated: HTTP 200."
 
