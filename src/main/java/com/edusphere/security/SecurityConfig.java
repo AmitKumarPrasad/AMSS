@@ -21,9 +21,14 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -36,6 +41,9 @@ public class SecurityConfig {
 
     @Value("${app.security.issuer}")
     private String issuer;
+
+    @Value("${app.web.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
 
     @PostConstruct
     void validateJwtSecret() {
@@ -79,7 +87,8 @@ public class SecurityConfig {
         var converter = new JwtAuthenticationConverter();
         converter.setPrincipalClaimName("sub");
         converter.setJwtGrantedAuthoritiesConverter(roles);
-        http.csrf(csrf -> csrf.disable())
+        http.cors(cors -> {})
+            .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/", "/index.html", "/assets/**", "/api/v1/auth/**",
@@ -89,5 +98,22 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter)));
         return http.build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .toList();
+        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Request-ID"));
+        configuration.setExposedHeaders(List.of("X-Request-ID", "Content-Disposition"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

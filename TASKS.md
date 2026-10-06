@@ -121,5 +121,12 @@ This file is the implementation source of truth for the next development batches
   - [x] Require CI to validate the release-readiness document and frontend transition boundary.
   - [x] Confirm the backend roadmap is complete and frontend work can begin against the stabilized REST/OpenAPI contracts.
 
+## Runnable Application Roadmap
+- [x] Add configurable frontend CORS support.
+- [x] Containerize the AI orchestrator and include it in local Docker Compose.
+- [x] Add local environment template and startup documentation.
+- [ ] Verify backend + AI stack CI and runtime health.
+- [ ] Verify frontend-to-backend end-to-end workflows with demo data.
+
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
