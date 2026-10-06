@@ -10,6 +10,16 @@ cp .env.example .env
 
 Set real values for `OPENAI_API_KEY`, `JWT_SECRET` and `AI_ORCHESTRATOR_SERVICE_TOKEN`.
 
+For a ready-to-test local school account, optionally set:
+
+```text
+APP_DEMO_ENABLED=true
+APP_DEMO_USERNAME=demo-admin
+APP_DEMO_PASSWORD=<choose-a-local-password-of-at-least-12-characters>
+```
+
+Demo mode is disabled by default and refuses to start without an explicit password.
+
 ## 2. Start backend stack
 
 ```bash
