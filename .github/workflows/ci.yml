@@ -108,6 +108,7 @@ jobs:
           OPENAI_API_KEY: ci-placeholder
           JWT_SECRET: ci-test-jwt-9f4c2a7e6b1d8c3f0a5e7b2d9c4f6a1e
           JWT_ISSUER: http://localhost:8080
+          AI_ORCHESTRATOR_SERVICE_TOKEN: ci-orchestrator-token
       - name: Smoke test application launch
         run: |
           trap 'docker compose down --volumes --remove-orphans' EXIT
@@ -176,6 +177,7 @@ jobs:
           OPENAI_API_KEY: ci-placeholder
           JWT_SECRET: ci-test-jwt-9f4c2a7e6b1d8c3f0a5e7b2d9c4f6a1e
           JWT_ISSUER: http://localhost:8080
+          AI_ORCHESTRATOR_SERVICE_TOKEN: ci-orchestrator-token
           SPRING_PROFILES_ACTIVE: prod
           SPRING_AI_MCP_SERVER_ENABLED: "false"
           NOTIFICATIONS_EMAIL_ENABLED: "false"
