@@ -9,17 +9,17 @@ import org.springframework.data.repository.query.Param;
 import java.util.UUID;
 
 public interface StudentRepository extends JpaRepository<Student, UUID> {
+    Page<Student> findBySchoolIdAndStatus(UUID schoolId, String status, Pageable pageable);
+
     @Query("""
             select s from Student s
             where s.schoolId = :schoolId
               and s.status = :status
               and (
-                    :query is null
-                    or lower(s.firstName) like lower(concat('%', :query, '%'))
+                    lower(s.firstName) like lower(concat('%', :query, '%'))
                     or lower(coalesce(s.lastName, '')) like lower(concat('%', :query, '%'))
                     or lower(s.admissionNumber) like lower(concat('%', :query, '%'))
               )
-            order by s.firstName asc, s.lastName asc, s.id asc
             """)
     Page<Student> search(@Param("schoolId") UUID schoolId,
                          @Param("status") String status,

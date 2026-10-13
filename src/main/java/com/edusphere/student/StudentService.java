@@ -34,8 +34,10 @@ public class StudentService {
                 Sort.Order.asc("firstName"),
                 Sort.Order.asc("lastName"),
                 Sort.Order.asc("id")));
-        return repository.search(schoolId, normalizedStatus, normalizedQuery, pageable)
-                .map(StudentView::from);
+        Page<Student> students = normalizedQuery == null
+                ? repository.findBySchoolIdAndStatus(schoolId, normalizedStatus, pageable)
+                : repository.search(schoolId, normalizedStatus, normalizedQuery, pageable);
+        return students.map(StudentView::from);
     }
 
     @Transactional
