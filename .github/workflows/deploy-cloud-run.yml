@@ -1,0 +1,83 @@
+name: Deploy AMSS to Google Cloud Run
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGION: asia-south1
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    outputs:
+      backend_url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: amss-backend
+          region: ${{ env.REGION }}
+          source: .
+          flags: --allow-unauthenticated
+          env_vars: |-
+            SPRING_PROFILES_ACTIVE=prod
+            DB_URL=${{ secrets.DB_URL }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_ISSUER=${{ steps.deploy.outputs.url }}
+            CORS_ALLOWED_ORIGINS=${{ vars.FRONTEND_ORIGIN }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            SPRING_AI_MCP_SERVER_ENABLED=false
+            NOTIFICATIONS_EMAIL_ENABLED=false
+            NOTIFICATIONS_SMS_ENABLED=false
+            APP_DEMO_ENABLED=true
+            APP_DEMO_USERNAME=demo-admin
+            APP_DEMO_PASSWORD=${{ secrets.APP_DEMO_PASSWORD }}
+            MANAGEMENT_HEALTH_REDIS_ENABLED=false
+
+  deploy-ai:
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    outputs:
+      ai_url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: amss-ai
+          region: ${{ env.REGION }}
+          source: ./ai-orchestrator
+          flags: --allow-unauthenticated
+          env_vars: |-
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            OPENAI_CHAT_MODEL=gpt-5.6
+            SPRING_MCP_URL=${{ needs.deploy-backend.outputs.backend_url }}/mcp
+            AI_ORCHESTRATOR_SERVICE_TOKEN=${{ secrets.AI_ORCHESTRATOR_SERVICE_TOKEN }}
+
+      - name: Show deployment URLs
+        run: |
+          echo "Backend: ${{ needs.deploy-backend.outputs.backend_url }}"
+          echo "AI: ${{ steps.deploy.outputs.url }}"
