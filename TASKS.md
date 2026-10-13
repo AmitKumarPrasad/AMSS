@@ -127,7 +127,7 @@ This file is the implementation source of truth for the next development batches
 - [x] Add local environment template and startup documentation.
 - [x] Verify backend + AI stack CI and runtime health.
 - [x] Add opt-in demo school/admin/student bootstrap for local testing.
-- [ ] Verify frontend-to-backend end-to-end workflows with demo data.
+- [x] Verify frontend-to-backend end-to-end workflows with demo data.
 
 ## Working Rule
 When the user says "next implementation" or "next batch", select the highest-priority unchecked task, inspect the current code first, implement it, run/inspect CI, fix failures, and update this tracker.
