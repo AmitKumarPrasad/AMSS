@@ -43,6 +43,7 @@ public class AuthController {
         var user = users.findByUsername(authentication.getName());
         Instant now = Instant.now();
         var roles = authentication.getAuthorities().stream()
+                .filter(a -> a.getAuthority().startsWith("ROLE_"))
                 .map(a -> a.getAuthority().replaceFirst("^ROLE_", "")).toList();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)

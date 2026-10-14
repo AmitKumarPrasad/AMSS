@@ -34,15 +34,15 @@ class FlywayMigrationIntegrationTest {
 
         var result = flyway.migrate();
         assertTrue(result.success);
-        assertEquals(19, result.migrationsExecuted);
+        assertEquals(20, result.migrationsExecuted);
 
         try (var connection = DriverManager.getConnection(
                 POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
-            assertEquals(19, countRows(connection,
+            assertEquals(20, countRows(connection,
                     "select count(*) from flyway_schema_history where success = true"));
 
             List<String> expectedTables = List.of(
-                    "schools", "app_users", "roles", "user_roles", "students", "audit_events",
+                    "schools", "app_users", "roles", "user_roles", "students", "audit_events", "production_school_setups",
                     "academic_years", "classes", "sections", "enrollments", "attendance_records",
                     "fee_invoices", "fee_payments", "assessments", "assessment_results",
                     "announcements", "announcement_reads", "subjects", "class_subjects",
