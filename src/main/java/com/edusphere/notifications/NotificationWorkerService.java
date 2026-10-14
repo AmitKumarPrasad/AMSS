@@ -40,6 +40,7 @@ public class NotificationWorkerService {
     }
 
     @Scheduled(fixedDelayString = "${notifications.worker.interval-ms:10000}")
+    @Transactional
     public void runWorker() {
         releaseExpiredClaims();
         String workerId = "amss-worker-" + UUID.randomUUID();
