@@ -95,3 +95,27 @@ request(f"{ROOT}/setup/users/{teacher['id']}/status?active=false", "PATCH", expe
 TOKEN=teacher_token
 request(f"{ROOT}/students", expected=401)
 print("Real school onboarding, clean data isolation, duplicate rejection, role protection and token revocation passed.")
+
+# Exercise the full academic/staff setup used by the real-school forms.
+TOKEN=admin_token
+request(f"{ROOT}/setup/users", "POST", {"username":"ci-long-password","email":"long@example.com","displayName":"Invalid password","password":"x"*73,"role":"TEACHER"}, expected=400)
+year=request(f"{ROOT}/academic-years", "POST", {"code":"CI-2026","name":"CI Academic Year","startsOn":"2026-01-01","endsOn":"2026-12-31"})
+request(f"{ROOT}/academic-years/{year['id']}/status?active=true", "PATCH")
+classroom=request(f"{ROOT}/classes", "POST", {"academicYearId":year['id'],"name":"Class 1","gradeLevel":1})
+section=request(f"{ROOT}/classes/{classroom['id']}/sections", "POST", {"name":"A","room":"101"},expected=201)
+subject=request(f"{ROOT}/academics/subjects", "POST", {"code":"MATH","name":"Mathematics"})
+request(f"{ROOT}/academics/classes/{classroom['id']}/subjects/{subject['id']}","POST")
+request(f"{ROOT}/enrollments/sections/{section['id']}/students", "POST", {"studentId":student['id'],"enrolledOn":today},expected=201)
+period={"subjectId":subject['id'],"dayOfWeek":"MONDAY","startsAt":"09:00","endsAt":"10:00","room":"101"}
+request(f"{ROOT}/timetable/sections/{section['id']}","POST",period)
+request(f"{ROOT}/timetable/sections/{section['id']}","POST",period,expected=409)
+assert len(request(f"{ROOT}/timetable/sections/{section['id']}")["content"])==1
+assessment=request(f"{ROOT}/assessments","POST",{"academicYearId":year['id'],"classId":classroom['id'],"name":"Math Test","assessmentDate":today,"maxMarks":"100"},expected=201)
+request(f"{ROOT}/assessments/{assessment['id']}/results/bulk","POST",{"entries":[{"studentId":student['id'],"marks":"85","grade":"A"}]})
+assert str(request(f"{ROOT}/assessments/{assessment['id']}/results")[0]["marks"]).startswith("85")
+request(f"{ROOT}/assessments/report-cards/{student['id']}?academicYearId={year['id']}")
+member=request(f"{ROOT}/staff","POST",{"employeeCode":"CI-STF-1","fullName":"CI Teacher","designation":"Teacher","employmentType":"FULL_TIME","joinedOn":today})
+leave=request(f"{ROOT}/staff/{member['id']}/leave","POST",{"leaveType":"CASUAL","startsOn":today,"endsOn":today,"reason":"CI workflow"})
+assert request(f"{ROOT}/staff/leave/{leave['id']}/review?status=APPROVED","POST")["status"]=="APPROVED"
+request(f"{ROOT}/staff/leave/{leave['id']}/review?status=REJECTED","POST",expected=409)
+print("Real school academic setup, enrollment, timetable collision, assessment results/report card and staff leave workflows passed.")
