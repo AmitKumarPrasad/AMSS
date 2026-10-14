@@ -3,6 +3,7 @@ package com.edusphere.notifications;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -30,10 +31,10 @@ public class NotificationClaimRepository {
                 )
                 returning id
                 """, ps -> {
-                    ps.setObject(1, now);
+                    ps.setTimestamp(1, Timestamp.from(now));
                     ps.setString(2, workerId);
-                    ps.setObject(3, now);
-                    ps.setObject(4, staleBefore);
+                    ps.setTimestamp(3, Timestamp.from(now));
+                    ps.setTimestamp(4, Timestamp.from(staleBefore));
                 }, (rs, rowNum) -> (UUID) rs.getObject("id"));
     }
 }
