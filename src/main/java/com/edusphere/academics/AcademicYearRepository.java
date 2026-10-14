@@ -11,7 +11,7 @@ public interface AcademicYearRepository extends JpaRepository<AcademicYear, UUID
     @Query("""
             select y from AcademicYear y
             where y.schoolId = :schoolId
-              and (:status is null or y.status = :status)
+              and (cast(:status as string) is null or y.status = cast(:status as string))
             order by y.startsOn desc, y.id desc
             """)
     Page<AcademicYear> search(@Param("schoolId") UUID schoolId, @Param("status") String status, Pageable pageable);

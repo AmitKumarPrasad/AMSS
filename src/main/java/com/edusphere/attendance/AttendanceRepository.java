@@ -18,10 +18,10 @@ public interface AttendanceRepository extends JpaRepository<AttendanceRecord, UU
     @Query("""
             select new com.edusphere.attendance.AttendanceRepository$SummaryCounts(
                 count(a),
-                sum(case when a.status = 'PRESENT' then 1 else 0 end),
-                sum(case when a.status = 'ABSENT' then 1 else 0 end),
-                sum(case when a.status = 'LATE' then 1 else 0 end),
-                sum(case when a.status = 'EXCUSED' then 1 else 0 end)
+                coalesce(sum(case when a.status = 'PRESENT' then 1 else 0 end), 0L),
+                coalesce(sum(case when a.status = 'ABSENT' then 1 else 0 end), 0L),
+                coalesce(sum(case when a.status = 'LATE' then 1 else 0 end), 0L),
+                coalesce(sum(case when a.status = 'EXCUSED' then 1 else 0 end), 0L)
             )
             from AttendanceRecord a
             where a.schoolId = :schoolId and a.attendanceDate = :date

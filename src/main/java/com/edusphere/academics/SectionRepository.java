@@ -11,9 +11,9 @@ public interface SectionRepository extends JpaRepository<Section, UUID> {
     @Query("""
             select s from Section s
             where s.classId = :classId
-              and (:status is null or s.status = :status)
-              and (:query is null or lower(s.name) like lower(concat('%', :query, '%'))
-                   or lower(coalesce(s.room, '')) like lower(concat('%', :query, '%')))
+              and (cast(:status as string) is null or s.status = cast(:status as string))
+              and (cast(:query as string) is null or lower(s.name) like lower(concat('%', cast(:query as string), '%'))
+                   or lower(coalesce(s.room, '')) like lower(concat('%', cast(:query as string), '%')))
             order by s.name asc, s.id asc
             """)
     Page<Section> search(@Param("classId") UUID classId,@Param("status") String status,@Param("query") String query,Pageable pageable);

@@ -13,9 +13,9 @@ public interface SubjectRepository extends JpaRepository<Subject, UUID> {
             select s from Subject s
             where s.schoolId = :schoolId
               and s.status = 'ACTIVE'
-              and (:query is null
-                   or lower(s.name) like lower(concat('%', :query, '%'))
-                   or lower(s.code) like lower(concat('%', :query, '%')))
+              and (cast(:query as string) is null
+                   or lower(s.name) like lower(concat('%', cast(:query as string), '%'))
+                   or lower(s.code) like lower(concat('%', cast(:query as string), '%')))
             order by s.name asc, s.id asc
             """)
     Page<Subject> search(@Param("schoolId") UUID schoolId,@Param("query") String query,Pageable pageable);
