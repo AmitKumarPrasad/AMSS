@@ -98,6 +98,7 @@ print("Real school onboarding, clean data isolation, duplicate rejection, role p
 
 # Exercise the full academic/staff setup used by the real-school forms.
 TOKEN=admin_token
+request(f"{ROOT}/setup/users", "POST", {"username":"ci-long-password","email":"long@example.com","displayName":"Invalid password","password":"x"*73,"role":"TEACHER"}, expected=400)
 year=request(f"{ROOT}/academic-years", "POST", {"code":"CI-2026","name":"CI Academic Year","startsOn":"2026-01-01","endsOn":"2026-12-31"})
 request(f"{ROOT}/academic-years/{year['id']}/status?active=true", "PATCH")
 classroom=request(f"{ROOT}/classes", "POST", {"academicYearId":year['id'],"name":"Class 1","gradeLevel":1})

@@ -58,6 +58,8 @@ public class SchoolSetupService {
 
     @Transactional
     public UserView createUser(UUID school, String username, String email, String name, String password, String role) {
+        if (password == null || password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72)
+            throw error(HttpStatus.BAD_REQUEST, "Password must be at most 72 UTF-8 bytes");
         if (!ROLES.contains(role)) throw error(HttpStatus.BAD_REQUEST, "Invalid school role");
         String normalized = username.trim().toLowerCase(java.util.Locale.ROOT);
         if (normalized.startsWith("demo")) throw error(HttpStatus.BAD_REQUEST, "Choose a real account username");
