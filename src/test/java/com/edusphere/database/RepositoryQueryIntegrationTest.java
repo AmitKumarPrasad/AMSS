@@ -1,5 +1,7 @@
 package com.edusphere.database;
 
+import com.edusphere.documents.Document;
+import com.edusphere.documents.DocumentRepository;
 import com.edusphere.academics.AcademicYear;
 import com.edusphere.academics.AcademicYearRepository;
 import com.edusphere.academics.Subject;
@@ -40,7 +42,7 @@ class RepositoryQueryIntegrationTest {
                 .build();
         try (SessionFactory factory = new MetadataSources(registry)
                 .addAnnotatedClass(AttendanceRecord.class).addAnnotatedClass(AcademicYear.class)
-                .addAnnotatedClass(StaffMember.class).addAnnotatedClass(Subject.class).addAnnotatedClass(FeeInvoice.class).buildMetadata().buildSessionFactory();
+                .addAnnotatedClass(Document.class).addAnnotatedClass(StaffMember.class).addAnnotatedClass(Subject.class).addAnnotatedClass(FeeInvoice.class).buildMetadata().buildSessionFactory();
              var session = factory.openSession()) {
             UUID school = UUID.randomUUID();
             session.beginTransaction();
@@ -77,6 +79,16 @@ class RepositoryQueryIntegrationTest {
                     .setParameter("status", "ACTIVE").setParameter("query", null).getResultList().size());
             assertEquals(1, session.createQuery(staffHql, StaffMember.class).setParameter("schoolId", school)
                     .setParameter("status", "ACTIVE").setParameter("query", "amit").getResultList().size());
+
+            UUID publisher = UUID.randomUUID();
+            session.beginTransaction();
+            session.persist(new Document(school, "Owned parent draft", null, "file.txt", "text/plain", school + "/owned/file.txt", null, "PARENT", publisher));
+            session.persist(new Document(school, "Private admin draft", null, "file.txt", "text/plain", school + "/admin/file.txt", null, "SCHOOL_ADMIN", UUID.randomUUID()));
+            session.getTransaction().commit();
+            String docsHql = DocumentRepository.class.getMethod("findPublisherVisible", UUID.class, UUID.class, java.util.Collection.class, Pageable.class).getAnnotation(Query.class).value();
+            var visible = session.createQuery(docsHql, Document.class).setParameter("schoolId", school)
+                    .setParameter("userId", publisher).setParameter("roles", java.util.Set.of("TEACHER")).getResultList();
+            assertEquals(1, visible.size());assertEquals("Owned parent draft", visible.getFirst().getTitle());
 
             session.clear();
             session.doWork(connection -> connection.setReadOnly(true));

@@ -40,6 +40,7 @@ public class DocumentService {
         if (schoolId == null || uploadedBy == null || request == null) bad("schoolId, uploadedBy and document request are required");
         String title = requiredText(request.title(), "title"), fileName = requiredText(request.fileName(), "fileName");
         String contentType = requiredText(request.contentType(), "contentType"), key = requiredText(request.storageKey(), "storageKey");
+        if (!ownedStorageKey(schoolId, key)) bad("storageKey must be a canonical path within this school");
         if (repository.existsBySchoolIdAndStorageKey(schoolId, key)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Document storage key already exists");
         Document saved = repository.save(new Document(schoolId, title, trimNullable(request.description()), sanitizeFileName(fileName),
                 contentType, key, trimNullable(request.checksum()), normalizeAudience(request.audienceRole()), uploadedBy));
@@ -70,6 +71,8 @@ public class DocumentService {
         Document document = get(schoolId, documentId);
         if (!"PUBLISHED".equals(document.getStatus()) || !isVisible(document.getAudienceRole(), normalizeRoles(roles)))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found");
+        if (!ownedStorageKey(schoolId, document.getStorageKey()))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found");
         try {
             return new DocumentDownload(storage.open(document.getStorageKey()), document.getFileName(), document.getContentType(), storage.size(document.getStorageKey()));
         } catch (IOException e) { throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document content not found", e); }
@@ -77,9 +80,16 @@ public class DocumentService {
 
     @Transactional(readOnly = true)
     public java.util.List<DocumentView> list(UUID schoolId, boolean publishedOnly, Collection<String> roles, int limit) {
+        return list(schoolId, publishedOnly, roles, limit, null);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<DocumentView> list(UUID schoolId, boolean publishedOnly, Collection<String> roles, int limit, UUID userId) {
         if (schoolId == null) bad("schoolId is required");
         if (limit < 1 || limit > MAX_LIST) bad("limit must be between 1 and " + MAX_LIST);
         Set<String> allowed = normalizeRoles(roles);
+        if (!publishedOnly && !allowed.contains("SUPER_ADMIN") && !allowed.contains("SCHOOL_ADMIN") && !allowed.contains("TEACHER"))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only document publishers can list unpublished documents");
         var pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
         var page = publishedOnly
                 ? (allowed.contains("SUPER_ADMIN")
@@ -87,13 +97,20 @@ public class DocumentService {
                     : allowed.isEmpty()
                         ? repository.findPublishedVisible(schoolId, "PUBLISHED", Set.of("__NO_ROLE__"), pageable)
                         : repository.findPublishedVisible(schoolId, "PUBLISHED", allowed, pageable))
-                : repository.findBySchoolIdOrderByCreatedAtDesc(schoolId, pageable);
+                : allowed.contains("SUPER_ADMIN") || allowed.contains("SCHOOL_ADMIN")
+                    ? repository.findBySchoolIdOrderByCreatedAtDesc(schoolId, pageable)
+                    : repository.findPublisherVisible(schoolId, userId, allowed, pageable);
         return page.stream().map(this::toView).toList();
     }
 
     @Transactional
-    public DocumentView publish(UUID schoolId, UUID documentId) {
+    public DocumentView publish(UUID schoolId, UUID documentId, UUID userId, Collection<String> roles) {
         Document document = get(schoolId, documentId);
+        Set<String> allowed = normalizeRoles(roles);
+        if (!allowed.contains("SUPER_ADMIN") && !allowed.contains("SCHOOL_ADMIN")
+                && !(allowed.contains("TEACHER") && (Objects.equals(userId, document.getUploadedBy())
+                    || document.getAudienceRole() == null || "TEACHER".equals(document.getAudienceRole()))))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found");
         if (!"DRAFT".equals(document.getStatus())) bad("Only draft documents can be published");
         document.publish(); return toView(repository.save(document));
     }
@@ -103,6 +120,15 @@ public class DocumentService {
         Document document = get(schoolId, documentId);
         if (!"PUBLISHED".equals(document.getStatus())) bad("Only published documents can be archived");
         document.archive(); return toView(repository.save(document));
+    }
+
+    private boolean ownedStorageKey(UUID schoolId, String key) {
+        if (schoolId == null || key == null || !key.startsWith(schoolId + "/") || key.contains("\\")) return false;
+        for (String segment : key.split("/", -1)) {
+            if (segment.isBlank() || ".".equals(segment) || "..".equals(segment)) return false;
+            if (segment.chars().anyMatch(Character::isISOControl)) return false;
+        }
+        return true;
     }
 
     private Document get(UUID schoolId, UUID id) {

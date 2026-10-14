@@ -2,6 +2,7 @@ package com.edusphere.security;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,20 +25,25 @@ public class AuthController {
     private final SchoolUserDetailsService users;
     private final long ttlMinutes;
     private final String issuer;
+    private final AuthenticationRateLimiter rateLimiter;
 
     public AuthController(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder,
-                          SchoolUserDetailsService users,
+                          SchoolUserDetailsService users, AuthenticationRateLimiter rateLimiter,
                           @Value("${app.security.access-token-minutes:30}") long ttlMinutes,
                           @Value("${app.security.issuer:http://localhost:8080}") String issuer) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.users = users;
+        this.rateLimiter = rateLimiter;
         this.ttlMinutes = ttlMinutes;
         this.issuer = issuer;
     }
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {
+        rateLimiter.check(request.username());
+        if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Password is too long");
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
         var user = users.findByUsername(authentication.getName());
@@ -60,6 +66,8 @@ public class AuthController {
         return new TokenResponse(token, "Bearer", ttlMinutes * 60);
     }
 
-    public record LoginRequest(@NotBlank String username, @NotBlank String password) {}
+    public record LoginRequest(@NotBlank @Size(max=120) String username, @NotBlank @Size(max=72) String password) {
+        @Override public String toString() { return "LoginRequest[password=REDACTED]"; }
+    }
     public record TokenResponse(String accessToken, String tokenType, long expiresIn) {}
 }

@@ -30,7 +30,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {
-        return build(ex.getStatusCode().value(), reason(ex, "Request failed"), request, List.of());
+        var response = build(ex.getStatusCode().value(), reason(ex, "Request failed"), request, List.of());
+        if (ex.getStatusCode().value() == 429)
+            return ResponseEntity.status(429).headers(response.getHeaders()).header("Retry-After", "60").body(response.getBody());
+        return response;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

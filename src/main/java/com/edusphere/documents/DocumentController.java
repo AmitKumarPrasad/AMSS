@@ -43,7 +43,7 @@ public class DocumentController {
     public List<DocumentService.DocumentView> list(@PathVariable UUID schoolId,@RequestParam(defaultValue="true") boolean publishedOnly,
                                                     @RequestParam(defaultValue="50") int limit,Authentication authentication){
         tenantAccess.requireSchool(authentication,schoolId);
-        return documentService.list(schoolId,publishedOnly,authentication.getAuthorities().stream().map(a->a.getAuthority()).toList(),limit);
+        return documentService.list(schoolId,publishedOnly,authentication.getAuthorities().stream().map(a->a.getAuthority()).toList(),limit,tenantAccess.currentUserId(authentication));
     }
 
     @GetMapping("/{documentId}/content")
@@ -58,7 +58,7 @@ public class DocumentController {
     @PostMapping("/{documentId}/publish")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public DocumentService.DocumentView publish(@PathVariable UUID schoolId,@PathVariable UUID documentId,Authentication authentication){
-        tenantAccess.requireSchool(authentication,schoolId); return documentService.publish(schoolId,documentId);
+        tenantAccess.requireSchool(authentication,schoolId); return documentService.publish(schoolId,documentId,tenantAccess.currentUserId(authentication),authentication.getAuthorities().stream().map(a->a.getAuthority()).toList());
     }
 
     @PostMapping("/{documentId}/archive")
