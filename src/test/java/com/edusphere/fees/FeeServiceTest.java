@@ -33,7 +33,7 @@ class FeeServiceTest {
         UUID school = UUID.randomUUID(), studentId = UUID.randomUUID(), invoiceId = UUID.randomUUID();
         FeeInvoice invoice = new FeeInvoice(school, studentId, "INV-1", LocalDate.now(), BigDecimal.TEN);
         FeeService service = new FeeService(invoices, payments, students);
-        when(invoices.findById(invoiceId)).thenReturn(Optional.of(invoice));
+        when(invoices.findByIdForUpdate(invoiceId)).thenReturn(Optional.of(invoice));
         assertThrows(ResponseStatusException.class, () -> service.recordPayment(school, invoiceId,
                 new FeeService.RecordPaymentRequest("PAY-1", BigDecimal.valueOf(11))));
         verify(payments, never()).save(any());
@@ -45,6 +45,7 @@ class FeeServiceTest {
         UUID invoiceId = UUID.randomUUID();
         FeeInvoice invoice = new FeeInvoice(invoiceSchool, UUID.randomUUID(), "INV-1", LocalDate.now(), BigDecimal.TEN);
         FeeService service = new FeeService(invoices, payments, students);
+        when(invoices.findByIdForUpdate(invoiceId)).thenReturn(Optional.of(invoice));
         when(invoices.findById(invoiceId)).thenReturn(Optional.of(invoice));
 
         assertThrows(ResponseStatusException.class, () -> service.listPayments(requestedSchool, invoiceId, 0, 50));
@@ -67,7 +68,7 @@ class FeeServiceTest {
         UUID school = UUID.randomUUID(), invoiceId = UUID.randomUUID();
         FeeInvoice invoice = new FeeInvoice(school, UUID.randomUUID(), "INV-1", LocalDate.now(), BigDecimal.TEN);
         FeeService service = new FeeService(invoices, payments, students);
-        when(invoices.findById(invoiceId)).thenReturn(Optional.of(invoice));
+        when(invoices.findByIdForUpdate(invoiceId)).thenReturn(Optional.of(invoice));
         when(payments.existsByPaymentReference("PAY-1")).thenReturn(true);
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class, () ->
@@ -82,7 +83,7 @@ class FeeServiceTest {
         UUID school = UUID.randomUUID(), studentId = UUID.randomUUID(), invoiceId = UUID.randomUUID();
         FeeInvoice invoice = new FeeInvoice(school, studentId, "INV-1", LocalDate.now(), BigDecimal.TEN);
         FeeService service = new FeeService(invoices, payments, students);
-        when(invoices.findById(invoiceId)).thenReturn(Optional.of(invoice));
+        when(invoices.findByIdForUpdate(invoiceId)).thenReturn(Optional.of(invoice));
         when(payments.existsByPaymentReference("PAY-1")).thenReturn(false);
         when(payments.save(any())).thenAnswer(i -> i.getArgument(0));
         service.recordPayment(school, invoiceId, new FeeService.RecordPaymentRequest(" PAY-1 ", BigDecimal.TEN));
