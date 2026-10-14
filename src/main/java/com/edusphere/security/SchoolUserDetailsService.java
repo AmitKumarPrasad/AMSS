@@ -20,13 +20,14 @@ public class SchoolUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var users = jdbc.query("""
-                SELECT id, school_id, username, password_hash, display_name, status
-                FROM app_users WHERE username = ? AND status = 'ACTIVE'
+                SELECT u.id, u.school_id, u.username, u.password_hash, u.display_name, u.status
+                FROM app_users u JOIN schools s ON s.id=u.school_id
+                WHERE u.username = ? AND u.status = 'ACTIVE' AND s.status='ACTIVE'
                 """, (rs, row) -> new UserRecord(
                 rs.getObject("id", UUID.class), rs.getObject("school_id", UUID.class),
                 rs.getString("username"), rs.getString("password_hash"),
                 rs.getString("display_name"), rs.getString("status")), username);
-        if (users.isEmpty()) throw new UsernameNotFoundException("Invalid credentials");
+        if (users.size() != 1) throw new UsernameNotFoundException("Invalid credentials");
         UserRecord u = users.getFirst();
         List<SimpleGrantedAuthority> authorities = jdbc.query(
                 "SELECT r.code FROM roles r JOIN user_roles ur ON ur.role_id=r.id WHERE ur.user_id=?",
@@ -36,9 +37,15 @@ public class SchoolUserDetailsService implements UserDetailsService {
     }
 
     public UserRecord findByUsername(String username) {
-        return jdbc.query("SELECT id, school_id, username, password_hash, display_name, status FROM app_users WHERE username=? AND status='ACTIVE'",
+        var matching = jdbc.query("SELECT u.id, u.school_id, u.username, u.password_hash, u.display_name, u.status FROM app_users u JOIN schools s ON s.id=u.school_id WHERE u.username=? AND u.status='ACTIVE' AND s.status='ACTIVE'",
                 (rs, row) -> new UserRecord(rs.getObject("id", UUID.class), rs.getObject("school_id", UUID.class), rs.getString("username"), rs.getString("password_hash"), rs.getString("display_name"), rs.getString("status")), username)
-                .stream().findFirst().orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
+                .stream().toList();
+        if (matching.size()!=1) throw new UsernameNotFoundException("Invalid credentials");
+        return matching.getFirst();
+    }
+
+    public boolean activeSession(UUID user,UUID school,String username) {
+        return jdbc.queryForObject("select count(*) from app_users u join schools s on s.id=u.school_id where u.id=? and u.school_id=? and u.username=? and u.status='ACTIVE' and s.status='ACTIVE'", Integer.class,user,school,username) == 1;
     }
 
     public record UserRecord(UUID id, UUID schoolId, String username, String passwordHash, String displayName, String status) {}

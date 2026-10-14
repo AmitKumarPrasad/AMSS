@@ -73,10 +73,11 @@ public class SecurityConfig {
         return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSecret.getBytes(StandardCharsets.UTF_8)));
     }
 
-    @Bean JwtDecoder jwtDecoder() {
+    @Bean JwtDecoder jwtDecoder(SchoolUserDetailsService users) {
         var key = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         var decoder = NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuer));
+        decoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                JwtValidators.createDefaultWithIssuer(issuer), new ActiveUserJwtValidator(users)));
         return decoder;
     }
 

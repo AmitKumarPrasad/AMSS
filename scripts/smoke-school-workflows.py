@@ -15,7 +15,8 @@ TOKEN = json.loads(Path("/tmp/demo-login.json").read_text())["accessToken"]
 
 def request(path, method="GET", body=None, expected=200, content_type="application/json", raw=False):
     data = body if isinstance(body, bytes) else json.dumps(body).encode() if body is not None else None
-    headers = {"Authorization": f"Bearer {TOKEN}", "X-Request-ID": str(uuid4()), "Content-Type": content_type}
+    headers = {"X-Request-ID": str(uuid4()), "Content-Type": content_type}
+    if TOKEN: headers["Authorization"] = f"Bearer {TOKEN}"
     try:
         with urlopen(Request(BASE + path, data=data, headers=headers, method=method), timeout=30) as response:
             status, payload = response.status, response.read()
@@ -63,3 +64,34 @@ assert request(f"{ROOT}/documents/{document['id']}/content", raw=True) == docume
 request(f"{ROOT}/documents/{document['id']}/archive", "POST")
 request(f"{ROOT}/documents/{document['id']}/content", expected=404)
 print("School reads, tenant boundary, attendance save, payment safeguards and document lifecycle passed under 512 MiB.")
+
+# Provision a clean real tenant and ensure demo identities cannot access it or reuse old tokens.
+profile = request(f"{ROOT}/setup/profile")
+assert profile["initialSetupAvailable"]
+real = request(f"{ROOT}/setup/production-school", "POST", {
+    "schoolName": "CI Production School", "timezone": "Asia/Kolkata", "username": "ci-real-admin",
+    "email": "admin@example.com", "displayName": "School Administrator", "password": "ci-real-password-123"
+})
+request(f"{ROOT}/students", expected=401)
+TOKEN = ""
+request("/api/v1/auth/login", "POST", {"username": "demo-admin", "password": "ci-demo-password-123"}, expected=401)
+TOKEN = request("/api/v1/auth/login", "POST", {"username": "ci-real-admin", "password": "ci-real-password-123"})["accessToken"]
+ROOT = f"/api/v1/schools/{real['schoolId']}"
+assert request(f"{ROOT}/students")["content"] == []
+assert not request(f"{ROOT}/setup/profile")["initialSetupAvailable"]
+request(f"/api/v1/schools/{SCHOOL}/students", expected=403)
+student = request(f"{ROOT}/students", "POST", {"admissionNumber": "REAL-001", "firstName": "Real", "lastName": "Student", "dateOfBirth": "2018-04-10"})
+request(f"{ROOT}/students", "POST", {"admissionNumber": "REAL-001", "firstName": "Duplicate"}, expected=409)
+teacher = request(f"{ROOT}/setup/users", "POST", {"username": "ci-real-teacher", "email": "teacher@example.com", "displayName": "Teacher", "password": "ci-teacher-password-123", "role": "TEACHER"})
+request(f"{ROOT}/setup/users", "POST", {"username": "ci-super-user", "email": "super@example.com", "displayName": "Escalation", "password": "ci-super-password-123", "role": "SUPER_ADMIN"}, expected=400)
+admin_token=TOKEN
+TOKEN=""
+TOKEN=request("/api/v1/auth/login", "POST", {"username":"ci-real-teacher","password":"ci-teacher-password-123"})["accessToken"]
+request(f"{ROOT}/setup/users", expected=403)
+assert request(f"{ROOT}/students")["content"][0]["id"]==student["id"]
+teacher_token=TOKEN
+TOKEN=admin_token
+request(f"{ROOT}/setup/users/{teacher['id']}/status?active=false", "PATCH", expected=200)
+TOKEN=teacher_token
+request(f"{ROOT}/students", expected=401)
+print("Real school onboarding, clean data isolation, duplicate rejection, role protection and token revocation passed.")
