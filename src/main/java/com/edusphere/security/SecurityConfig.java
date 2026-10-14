@@ -92,9 +92,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
+                .requestMatchers("/actuator/prometheus", "/actuator/metrics", "/actuator/metrics/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/", "/index.html", "/assets/**", "/api/v1/auth/**",
                     "/actuator/health", "/actuator/health/**", "/actuator/info",
-                    "/actuator/prometheus", "/swagger-ui.html", "/swagger-ui/**",
+                    "/swagger-ui.html", "/swagger-ui/**",
                     "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter)));

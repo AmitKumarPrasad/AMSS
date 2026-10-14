@@ -12,6 +12,13 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     Page<Document> findBySchoolIdAndStatusOrderByCreatedAtDesc(UUID schoolId, String status, Pageable pageable);
 
     @Query("""
+            select d from Document d where d.schoolId = :schoolId
+            and (d.uploadedBy = :userId or d.audienceRole is null or d.audienceRole in :roles)
+            order by d.createdAt desc
+            """)
+    Page<Document> findPublisherVisible(UUID schoolId, UUID userId, java.util.Collection<String> roles, Pageable pageable);
+
+    @Query("""
             select d from Document d
             where d.schoolId = :schoolId
               and d.status = :status

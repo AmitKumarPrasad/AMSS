@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.web.server.ResponseStatusException;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -65,7 +67,7 @@ class DocumentServiceTest {
     @Test
     void allDocumentsIncludeDraftsWithoutAudienceFiltering() {
         UUID schoolId = UUID.randomUUID();
-        when(repository.findBySchoolIdOrderByCreatedAtDesc(eq(schoolId), any(Pageable.class)))
+        when(repository.findPublisherVisible(eq(schoolId), isNull(), eq(java.util.Set.of("TEACHER")), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(document(schoolId, "PARENT", "Parent draft"), document(schoolId, "TEACHER", "Teacher draft")),
                         Pageable.ofSize(2), 2));
 
@@ -75,8 +77,44 @@ class DocumentServiceTest {
         assertThat(result).extracting(DocumentService.DocumentView::title).containsExactly("Parent draft", "Teacher draft");
     }
 
+    @Test void readersCannotRequestUnpublishedMetadata() {
+        var service = new DocumentService(repository, auditService, storage);
+        for (String role : List.of("PARENT", "STUDENT", "ACCOUNTANT")) {
+            var ex = assertThrows(ResponseStatusException.class, () -> service.list(UUID.randomUUID(), false, List.of("ROLE_" + role), 50));
+            assertEquals(403, ex.getStatusCode().value());
+        }
+        verifyNoInteractions(repository, storage);
+    }
+
+    @Test void registrationRejectsForeignKeysAndPathAliases() {
+        UUID school = UUID.randomUUID();
+        var service = new DocumentService(repository, auditService, storage);
+        for (String key : List.of(UUID.randomUUID() + "/file.pdf", school + "//file.pdf", school + "/../file.pdf", school + "/./file.pdf", school + "/folder\\file.pdf")) {
+            var request = new DocumentService.CreateDocumentRequest("Test", null, "file.pdf", "application/pdf", key, null, null);
+            assertEquals(400, assertThrows(ResponseStatusException.class, () -> service.register(school, request, UUID.randomUUID())).getStatusCode().value());
+        }
+        verifyNoInteractions(repository, auditService, storage);
+    }
+
+    @Test void preexistingForeignKeyCannotBeDownloaded() {
+        UUID school = UUID.randomUUID(), id = UUID.randomUUID();
+        Document forged = new Document(school, "Forged", null, "file.txt", "text/plain", UUID.randomUUID() + "/file.txt", null, "TEACHER", UUID.randomUUID());
+        forged.publish();when(repository.findById(id)).thenReturn(java.util.Optional.of(forged));
+        var service = new DocumentService(repository, auditService, storage);
+        assertEquals(404, assertThrows(ResponseStatusException.class, () -> service.download(school, id, List.of("ROLE_TEACHER"))).getStatusCode().value());
+        verifyNoInteractions(storage);
+    }
+
+    @Test void teacherCannotPublishAnotherUsersAdminOnlyDocument() {
+        UUID school = UUID.randomUUID(), id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(java.util.Optional.of(document(school, "SCHOOL_ADMIN", "Private")));
+        var service = new DocumentService(repository, auditService, storage);
+        assertEquals(404, assertThrows(ResponseStatusException.class, () -> service.publish(school, id, UUID.randomUUID(), List.of("ROLE_TEACHER"))).getStatusCode().value());
+        verify(repository, never()).save(any());
+    }
+
     private Document document(UUID schoolId, String audience, String title) {
         return new Document(schoolId, title, null, title + ".pdf", "application/pdf",
-                UUID.randomUUID().toString(), null, audience, UUID.randomUUID());
+                schoolId + "/" + UUID.randomUUID() + "/file.pdf", null, audience, UUID.randomUUID());
     }
 }

@@ -128,10 +128,9 @@ jobs:
               cat /tmp/readiness.json
               echo "Readiness contract validated: HTTP 200."
 
-              echo "Validating Prometheus metrics contract..."
-              curl --fail --silent http://localhost:8080/actuator/prometheus > /tmp/prometheus.txt
-              grep -F 'jvm_memory_used_bytes' /tmp/prometheus.txt >/dev/null || { echo "Expected JVM metric missing"; exit 1; }
-              echo "Prometheus metrics contract validated: HTTP 200 and JVM metrics exposed."
+              echo "Validating metrics access control..."
+              metrics_status=$(curl --silent --output /tmp/prometheus.txt --write-out "%{http_code}" http://localhost:8080/actuator/prometheus)
+              test "$metrics_status" = "401" || { echo "Expected private metrics HTTP 401, got $metrics_status"; exit 1; }
 
               echo
               echo "Validating authentication contract..."

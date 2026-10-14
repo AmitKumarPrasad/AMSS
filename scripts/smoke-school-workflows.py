@@ -121,3 +121,30 @@ leave=request(f"{ROOT}/staff/{member['id']}/leave","POST",{"leaveType":"CASUAL",
 assert request(f"{ROOT}/staff/leave/{leave['id']}/review?status=APPROVED","POST")["status"]=="APPROVED"
 request(f"{ROOT}/staff/leave/{leave['id']}/review?status=REJECTED","POST",expected=409)
 print("Real school academic setup, enrollment, timetable collision, assessment results/report card and staff leave workflows passed.")
+
+# Security regression: a real-school publisher cannot rebind the old school's file.
+TOKEN=admin_token
+request(f"{ROOT}/documents", "POST", {"title":"Foreign file","fileName":"ci.txt","contentType":"text/plain","storageKey":document["storageKey"]}, expected=400)
+request(f"{ROOT}/documents", "POST", {"title":"Foreign alias","fileName":"ci.txt","contentType":"text/plain","storageKey":document["storageKey"].replace("/","//",1)}, expected=400)
+parent=request(f"{ROOT}/setup/users", "POST", {"username":"ci-qa-parent","email":"parent@example.com","displayName":"Parent","password":"ci-parent-password-123","role":"PARENT"})
+TOKEN=""
+TOKEN=request("/api/v1/auth/login", "POST", {"username":"ci-qa-parent","password":"ci-parent-password-123"})["accessToken"]
+request(f"{ROOT}/documents?publishedOnly=false", expected=403)
+request(f"{ROOT}/documents?publishedOnly=true")
+request("/actuator/prometheus", expected=403)
+TOKEN=""
+request("/actuator/prometheus", expected=401)
+request("/api/v1/auth/login", "POST", {"username":"ci-qa-parent","password":"x"*100}, expected=400)
+for i in range(11):
+    request("/api/v1/auth/login", "POST", {"username":"ci-throttle-unknown","password":"wrong-password"}, expected=401 if i<10 else 429)
+TOKEN=admin_token
+print("Document-key isolation, draft metadata protection, private metrics, bounded login inputs and login throttling passed.")
+
+TOKEN=admin_token
+private_doc=request(f"{ROOT}/documents", "POST", {"title":"Private draft","fileName":"private.txt","contentType":"text/plain","storageKey":real['schoolId']+"/qa/private.txt","audienceRole":"SCHOOL_ADMIN"}, expected=201)
+qa_teacher=request(f"{ROOT}/setup/users", "POST", {"username":"ci-doc-teacher","email":"docteacher@example.com","displayName":"Teacher","password":"ci-doc-password-123","role":"TEACHER"})
+TOKEN=""
+TOKEN=request("/api/v1/auth/login", "POST", {"username":"ci-doc-teacher","password":"ci-doc-password-123"})["accessToken"]
+assert private_doc['id'] not in [d['id'] for d in request(f"{ROOT}/documents?publishedOnly=false")]
+request(f"{ROOT}/documents/{private_doc['id']}/publish", "POST", expected=404)
+print("Teacher draft metadata and publishing respect document ownership/audience.")
