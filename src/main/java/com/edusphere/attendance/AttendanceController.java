@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -56,8 +57,8 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public List<AttendanceService.AttendanceView> history(@PathVariable UUID schoolId,
                                                             @PathVariable UUID studentId,
-                                                            @RequestParam LocalDate from,
-                                                            @RequestParam LocalDate to,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
                                                             Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return attendanceService.history(schoolId, studentId, from, to);
@@ -66,7 +67,7 @@ public class AttendanceController {
     @GetMapping("/summary")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN','TEACHER')")
     public AttendanceService.DailySummary summary(@PathVariable UUID schoolId,
-                                                   @RequestParam LocalDate date,
+                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                    Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return attendanceService.dailySummary(schoolId, date);

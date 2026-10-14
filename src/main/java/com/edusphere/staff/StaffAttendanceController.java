@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -37,8 +38,8 @@ public class StaffAttendanceController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','SCHOOL_ADMIN')")
     public List<StaffAttendanceService.AttendanceView> history(
             @PathVariable UUID schoolId, @PathVariable UUID staffId,
-            @RequestParam(required = false) LocalDate from,
-            @RequestParam(required = false) LocalDate to, Authentication authentication) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to, Authentication authentication) {
         tenantAccess.requireSchool(authentication, schoolId);
         return service.history(schoolId, staffId, from, to);
     }

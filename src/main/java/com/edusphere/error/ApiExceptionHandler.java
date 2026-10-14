@@ -11,6 +11,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.regex.Pattern;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     private static final String REQUEST_ID_HEADER = "X-Request-ID";
     private static final Pattern SAFE_REQUEST_ID = Pattern.compile("[A-Za-z0-9._:-]{1,100}");
@@ -56,6 +60,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
+        if (ex instanceof ErrorResponse error && error.getStatusCode().is4xxClientError()) {
+            int status = error.getStatusCode().value();
+            return build(status, HttpStatus.valueOf(status).getReasonPhrase(), request, List.of());
+        }
+        log.error("Unhandled API exception on {} ({})", request.getRequestURI(), ex.getClass().getSimpleName(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal server error", request, List.of());
     }
 
