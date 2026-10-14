@@ -4,6 +4,8 @@ import com.edusphere.academics.AcademicYear;
 import com.edusphere.academics.AcademicYearRepository;
 import com.edusphere.academics.Subject;
 import com.edusphere.academics.SubjectRepository;
+import com.edusphere.staff.StaffMember;
+import com.edusphere.staff.StaffRepository;
 import com.edusphere.attendance.AttendanceRecord;
 import com.edusphere.attendance.AttendanceRepository;
 import com.edusphere.fees.FeeInvoice;
@@ -38,10 +40,11 @@ class RepositoryQueryIntegrationTest {
                 .build();
         try (SessionFactory factory = new MetadataSources(registry)
                 .addAnnotatedClass(AttendanceRecord.class).addAnnotatedClass(AcademicYear.class)
-                .addAnnotatedClass(Subject.class).addAnnotatedClass(FeeInvoice.class).buildMetadata().buildSessionFactory();
+                .addAnnotatedClass(StaffMember.class).addAnnotatedClass(Subject.class).addAnnotatedClass(FeeInvoice.class).buildMetadata().buildSessionFactory();
              var session = factory.openSession()) {
             UUID school = UUID.randomUUID();
             session.beginTransaction();
+            session.persist(new StaffMember(school, "STAFF-1", "Amit Teacher", null, null, "Teacher", "FULL_TIME", LocalDate.now()));
             session.persist(new Subject(school, "MATH", "Mathematics"));
             session.persist(new AcademicYear(school, "2026", "2026-27", LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)));
             FeeInvoice invoice = new FeeInvoice(school, UUID.randomUUID(), "QA-1", LocalDate.now(), BigDecimal.ONE);
@@ -67,6 +70,13 @@ class RepositoryQueryIntegrationTest {
                     .getAnnotation(Query.class).value();
             assertEquals(1, session.createQuery(yearHql, AcademicYear.class).setParameter("schoolId", school)
                     .setParameter("status", null).getResultList().size());
+
+            String staffHql = StaffRepository.class.getMethod("search", UUID.class, String.class, String.class, Pageable.class)
+                    .getAnnotation(Query.class).value();
+            assertEquals(1, session.createQuery(staffHql, StaffMember.class).setParameter("schoolId", school)
+                    .setParameter("status", "ACTIVE").setParameter("query", null).getResultList().size());
+            assertEquals(1, session.createQuery(staffHql, StaffMember.class).setParameter("schoolId", school)
+                    .setParameter("status", "ACTIVE").setParameter("query", "amit").getResultList().size());
 
             session.clear();
             session.doWork(connection -> connection.setReadOnly(true));

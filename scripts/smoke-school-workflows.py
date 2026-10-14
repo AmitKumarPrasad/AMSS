@@ -115,6 +115,8 @@ request(f"{ROOT}/assessments/{assessment['id']}/results/bulk","POST",{"entries":
 assert str(request(f"{ROOT}/assessments/{assessment['id']}/results")[0]["marks"]).startswith("85")
 request(f"{ROOT}/assessments/report-cards/{student['id']}?academicYearId={year['id']}")
 member=request(f"{ROOT}/staff","POST",{"employeeCode":"CI-STF-1","fullName":"CI Teacher","designation":"Teacher","employmentType":"FULL_TIME","joinedOn":today})
+assert request(f"{ROOT}/staff")["content"][0]["id"]==member["id"]
+assert request(f"{ROOT}/staff?q=Teacher")["content"][0]["id"]==member["id"]
 leave=request(f"{ROOT}/staff/{member['id']}/leave","POST",{"leaveType":"CASUAL","startsOn":today,"endsOn":today,"reason":"CI workflow"})
 assert request(f"{ROOT}/staff/leave/{leave['id']}/review?status=APPROVED","POST")["status"]=="APPROVED"
 request(f"{ROOT}/staff/leave/{leave['id']}/review?status=REJECTED","POST",expected=409)
