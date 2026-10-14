@@ -112,7 +112,7 @@ jobs:
       - name: Smoke test application launch
         run: |
           trap 'docker compose down --volumes --remove-orphans' EXIT
-          docker compose up -d --build app
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --build app
           for attempt in {1..150}; do
             if curl --fail --silent http://localhost:8080/actuator/health/liveness > /tmp/liveness.json; then
               echo "Application HTTP server is live."
@@ -174,6 +174,8 @@ jobs:
           assert any(item.get("admissionNumber") == "DEMO-001" for item in content), "Seeded demo student missing"
           print("Authenticated student workflow validated.")
           PY
+
+              python scripts/smoke-school-workflows.py
 
               echo "Validating OpenAPI contract..."
               curl --fail --silent http://localhost:8080/v3/api-docs > /tmp/openapi.json

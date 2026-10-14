@@ -6,6 +6,10 @@ import com.edusphere.academics.Subject;
 import com.edusphere.academics.SubjectRepository;
 import com.edusphere.attendance.AttendanceRecord;
 import com.edusphere.attendance.AttendanceRepository;
+import com.edusphere.fees.FeeInvoice;
+import com.edusphere.fees.FeeInvoiceRepository;
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import java.math.BigDecimal;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -34,12 +38,14 @@ class RepositoryQueryIntegrationTest {
                 .build();
         try (SessionFactory factory = new MetadataSources(registry)
                 .addAnnotatedClass(AttendanceRecord.class).addAnnotatedClass(AcademicYear.class)
-                .addAnnotatedClass(Subject.class).buildMetadata().buildSessionFactory();
+                .addAnnotatedClass(Subject.class).addAnnotatedClass(FeeInvoice.class).buildMetadata().buildSessionFactory();
              var session = factory.openSession()) {
             UUID school = UUID.randomUUID();
             session.beginTransaction();
             session.persist(new Subject(school, "MATH", "Mathematics"));
             session.persist(new AcademicYear(school, "2026", "2026-27", LocalDate.of(2026, 4, 1), LocalDate.of(2027, 3, 31)));
+            FeeInvoice invoice = new FeeInvoice(school, UUID.randomUUID(), "QA-1", LocalDate.now(), BigDecimal.ONE);
+            session.persist(invoice);
             session.getTransaction().commit();
 
             String summaryHql = AttendanceRepository.class.getMethod("summary", UUID.class, LocalDate.class)
@@ -61,6 +67,17 @@ class RepositoryQueryIntegrationTest {
                     .getAnnotation(Query.class).value();
             assertEquals(1, session.createQuery(yearHql, AcademicYear.class).setParameter("schoolId", school)
                     .setParameter("status", null).getResultList().size());
+
+            session.clear();
+            session.doWork(connection -> connection.setReadOnly(true));
+            session.beginTransaction();
+            FeeInvoiceRepository invoices = new JpaRepositoryFactory(session).getRepository(FeeInvoiceRepository.class);
+            assertTrue(invoices.findById(invoice.getId()).isPresent());
+            session.getTransaction().commit();
+            session.doWork(connection -> connection.setReadOnly(false));
+            session.beginTransaction();
+            assertTrue(invoices.findByIdForUpdate(invoice.getId()).isPresent());
+            session.getTransaction().commit();
         } finally {
             StandardServiceRegistryBuilder.destroy(registry);
         }

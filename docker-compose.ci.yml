@@ -1,0 +1,6 @@
+services:
+  app:
+    mem_limit: 512m
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx192m -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC"
+      SPRING_AI_MCP_SERVER_ENABLED: "true"
