@@ -32,3 +32,26 @@ If you want a strictly zero-cost launch, set a non-empty placeholder OpenAI key 
 Configure Workload Identity Federation for GitHub and grant the deployment service account access to deploy Cloud Run services and build from source.
 
 The workflow is manual (`workflow_dispatch`) so it will not attempt a deployment until the account-level variables and secrets are configured.
+
+
+## One-time Google Cloud bootstrap
+
+After creating a Google Cloud project, open Cloud Shell and run:
+
+```bash
+git clone https://github.com/AmitKumarPrasad/AMSS.git
+cd AMSS
+bash scripts/gcp-bootstrap.sh YOUR_GCP_PROJECT_ID
+```
+
+The script enables the required Google APIs, creates the deployer service account, and configures GitHub OIDC Workload Identity Federation without a long-lived JSON key.
+
+## Neon JDBC note
+
+For Spring Boot, `DB_URL` must use JDBC form, for example:
+
+```
+jdbc:postgresql://<neon-host>/edusphere?sslmode=require
+```
+
+Keep the username and password in `DB_USERNAME` and `DB_PASSWORD`; never commit them to the repository.
