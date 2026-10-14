@@ -16,10 +16,10 @@ public interface StaffRepository extends JpaRepository<StaffMember, UUID> {
             where s.schoolId = :schoolId
               and s.status = :status
               and (
-                    :query is null
-                    or lower(s.fullName) like lower(concat('%', :query, '%'))
-                    or lower(s.employeeCode) like lower(concat('%', :query, '%'))
-                    or lower(coalesce(s.designation, '')) like lower(concat('%', :query, '%'))
+                    cast(:query as string) is null
+                    or lower(s.fullName) like lower(concat('%', cast(:query as string), '%'))
+                    or lower(s.employeeCode) like lower(concat('%', cast(:query as string), '%'))
+                    or lower(coalesce(s.designation, '')) like lower(concat('%', cast(:query as string), '%'))
               )
             order by s.fullName asc, s.id asc
             """)
